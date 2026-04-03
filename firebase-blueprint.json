@@ -1,0 +1,114 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "User profile and role data.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["super_admin", "admin", "user"] },
+        "permissions": { "type": "array", "items": { "type": "string" } },
+        "expiryDate": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "user_invite": {
+      "title": "User Invite",
+      "description": "Pending admin invitations.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string" },
+        "permissions": { "type": "array", "items": { "type": "string" } },
+        "expiryDate": { "type": "string", "format": "date-time" },
+        "invitedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "page": {
+      "title": "Page",
+      "description": "Dynamic page content and structure.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "slug": { "type": "string" },
+        "title": { "type": "object" },
+        "content": { "type": "object" },
+        "parentId": { "type": "string" },
+        "order": { "type": "number" },
+        "theme": { "type": "string" },
+        "sections": { "type": "array" },
+        "media": { "type": "array" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "analytic": {
+      "title": "Analytic",
+      "description": "Visitor tracking data.",
+      "type": "object",
+      "properties": {
+        "pageId": { "type": "string" },
+        "visitorId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "type": { "type": "string" },
+        "metadata": { "type": "object" }
+      }
+    },
+    "ticket": {
+      "title": "Ticket",
+      "description": "Q&A module question.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "question": { "type": "string" },
+        "answer": { "type": "string" },
+        "status": { "type": "string", "enum": ["unanswered", "answered", "urgent"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ad": {
+      "title": "Ad",
+      "description": "Ad space configuration.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["popup", "banner", "sidebar"] },
+        "content": { "type": "object" },
+        "frequency": { "type": "number" },
+        "active": { "type": "boolean" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "User profiles."
+    },
+    "/users_invites/{inviteId}": {
+      "schema": "user_invite",
+      "description": "Pending admin invitations."
+    },
+    "/pages/{pageId}": {
+      "schema": "page",
+      "description": "Dynamic pages."
+    },
+    "/analytics/{analyticId}": {
+      "schema": "analytic",
+      "description": "Visitor analytics."
+    },
+    "/tickets/{ticketId}": {
+      "schema": "ticket",
+      "description": "Q&A tickets."
+    },
+    "/ads/{adId}": {
+      "schema": "ad",
+      "description": "Ad spaces."
+    }
+  }
+}

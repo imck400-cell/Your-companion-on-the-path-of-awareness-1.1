@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Fields: uid, email, displayName, photoURL, role, createdAt
+    //
+    // Collection: pages
+    // Fields: id, slug, title (map), content (map), parentId, order, theme, sections (list), media (list), updatedAt
+    //
+    // Collection: analytics
+    // Fields: pageId, visitorId, timestamp, type, metadata (map)
+    //
+    // Collection: tickets
+    // Fields: id, userId, question, answer, status, createdAt
+    //
+    // Collection: ads
+    // Fields: id, type, content (map), frequency, active
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'] ||
+         (request.auth.token.email == "imck400@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin' ||
+         (request.auth.token.email == "imck400@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && (isOwner(userId) || isSuperAdmin());
+      allow update: if isAuthenticated() && (isOwner(userId) || isSuperAdmin()) &&
+        (request.resource.data.role == resource.data.role || isSuperAdmin());
+      allow delete: if isSuperAdmin();
+    }
+
+    match /users_invites/{inviteId} {
+      allow read, write: if isSuperAdmin();
+    }
+
+    match /pages/{pageId} {
+      allow read: if true; // Publicly readable
+      allow write: if isAdmin();
+    }
+
+    match /analytics/{analyticId} {
+      allow read: if isAdmin();
+      allow create: if true; // Publicly writable for tracking
+      allow update, delete: if isAdmin();
+    }
+
+    match /tickets/{ticketId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.userId && !('answer' in request.resource.data));
+      allow delete: if isAdmin();
+    }
+
+    match /ads/{adId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
