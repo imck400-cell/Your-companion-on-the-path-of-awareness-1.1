@@ -83,6 +83,34 @@
         "frequency": { "type": "number" },
         "active": { "type": "boolean" }
       }
+    },
+    "site_settings": {
+      "title": "Site Settings",
+      "description": "Global site configurations like home page hero and announcements.",
+      "type": "object",
+      "properties": {
+        "announcements": {
+          "type": "object",
+          "properties": {
+            "items": { "type": "array", "items": { "type": "string" } },
+            "speed": { "type": "number" },
+            "active": { "type": "boolean" }
+          }
+        },
+        "hero_slides": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "image": { "type": "string" },
+              "title": { "type": "object" },
+              "description": { "type": "object" },
+              "interval": { "type": "number" }
+            }
+          }
+        }
+      }
     }
   },
   "firestore": {
@@ -109,6 +137,10 @@
     "/ads/{adId}": {
       "schema": "ad",
       "description": "Ad spaces."
+    },
+    "/site_settings/{settingsId}": {
+      "schema": "site_settings",
+      "description": "Global site settings."
     }
   }
 }

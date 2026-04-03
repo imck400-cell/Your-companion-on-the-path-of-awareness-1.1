@@ -8,6 +8,7 @@ import { PageManager } from '@/components/admin/PageManager';
 import { TicketSystem } from '@/components/admin/TicketSystem';
 import { AdEngine } from '@/components/admin/AdEngine';
 import { AccountManagement } from '@/components/admin/AccountManagement';
+import { HomeSettings } from '@/components/admin/HomeSettings';
 import { useAuth } from '@/context/AuthContext';
 
 const AdminDashboard: React.FC = () => {
@@ -64,6 +65,12 @@ const AdminDashboard: React.FC = () => {
               {t('settings')}
             </TabsTrigger>
           )}
+          {hasPermission('home_settings') && (
+            <TabsTrigger value="home_settings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <LayoutDashboard className="h-4 w-4 mr-2" />
+              إعدادات الواجهة
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="overview">
@@ -112,6 +119,10 @@ const AdminDashboard: React.FC = () => {
 
         <TabsContent value="ads">
           {hasPermission('ads') ? <AdEngine /> : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
+        </TabsContent>
+
+        <TabsContent value="home_settings">
+          {hasPermission('home_settings') ? <HomeSettings /> : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
         </TabsContent>
 
         <TabsContent value="settings">

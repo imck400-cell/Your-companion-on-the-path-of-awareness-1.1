@@ -23,6 +23,7 @@ const FEATURES = [
   { id: 'analytics', label: 'الإحصائيات' },
   { id: 'tickets', label: 'التذاكر والاستفسارات' },
   { id: 'ads', label: 'محرك الإعلانات' },
+  { id: 'home_settings', label: 'إعدادات الواجهة' },
   { id: 'settings', label: 'الإعدادات' },
 ];
 

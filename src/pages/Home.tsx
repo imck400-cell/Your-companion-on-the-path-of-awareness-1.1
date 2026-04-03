@@ -13,6 +13,8 @@ import { DEFAULT_HUBS } from '@/data/defaultPages';
 import { useAuth } from '@/context/AuthContext';
 import { compressImage, getBase64Size } from '@/lib/imageUtils';
 import * as Icons from 'lucide-react';
+import { AnnouncementTicker } from '@/components/AnnouncementTicker';
+import { HeroCarousel } from '@/components/HeroCarousel';
 
 import { handleFirestoreError, OperationType } from '@/lib/firestoreErrorHandler';
 
@@ -20,6 +22,7 @@ const Home: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { isSuperAdmin, profile } = useAuth();
   const [hubs, setHubs] = useState<any[]>([]);
+  const [siteSettings, setSiteSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedHubId, setSelectedHubId] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -43,6 +46,37 @@ const Home: React.FC = () => {
             });
           }
         }
+
+        // Seed default site settings
+        const settingsRef = doc(db, 'site_settings', 'home_page');
+        const settingsSnap = await getDoc(settingsRef);
+        if (!settingsSnap.exists()) {
+          await setDoc(settingsRef, {
+            announcements: {
+              items: ['مرحباً بكم في منصة رفيقك في طريق الوعي', 'اكتشف برامجنا التدريبية الجديدة لعام 2024'],
+              speed: 20,
+              active: true
+            },
+            hero_slides: [
+              {
+                id: '1',
+                image: 'https://picsum.photos/seed/awareness1/1920/1080',
+                title: { ar: 'الوعي هو مفتاح التغيير', en: 'Awareness is the Key' },
+                description: { ar: 'رحلة تبدأ من الداخل لتغيير واقعك الخارجي', en: 'A journey that starts from within' },
+                interval: 5
+              },
+              {
+                id: '2',
+                image: 'https://picsum.photos/seed/awareness2/1920/1080',
+                title: { ar: 'تمكين القادة بالذكاء العاطفي', en: 'Empowering Leaders' },
+                description: { ar: 'بناء مؤسسات قائمة على القيم والوعي الإنساني', en: 'Building value-based organizations' },
+                interval: 5
+              }
+            ],
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+        }
       } catch (error) {
         handleFirestoreError(error, OperationType.GET, 'pages');
       }
@@ -54,11 +88,21 @@ const Home: React.FC = () => {
       if (!snapshot.empty) {
         setHubs(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
       }
-      setLoading(false);
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'pages');
     });
-    return () => unsubscribe();
+
+    const settingsUnsubscribe = onSnapshot(doc(db, 'site_settings', 'home_page'), (docSnap) => {
+      if (docSnap.exists()) {
+        setSiteSettings(docSnap.data());
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      unsubscribe();
+      settingsUnsubscribe();
+    };
   }, []);
 
   const handleSyncWithDefaults = async () => {
@@ -320,9 +364,21 @@ const Home: React.FC = () => {
 
   return (
     <div className="space-y-16 pb-20 pt-8">
+      {siteSettings?.announcements?.active && (
+        <AnnouncementTicker 
+          items={siteSettings.announcements.items} 
+          speed={siteSettings.announcements.speed} 
+        />
+      )}
+
       {/* Header */}
-      <header className="text-center space-y-6 max-w-5xl mx-auto glass-card p-6 md:p-12 rounded-2xl md:rounded-[3rem] relative">
-        {isSuperAdmin && (
+      <header className="text-center space-y-12 max-w-7xl mx-auto px-4">
+        {siteSettings?.hero_slides?.length > 0 && (
+          <HeroCarousel slides={siteSettings.hero_slides} lang={lang} />
+        )}
+        
+        <div className="glass-card p-6 md:p-12 rounded-2xl md:rounded-[3rem] relative max-w-5xl mx-auto">
+          {isSuperAdmin && (
           <Button
             variant="outline"
             size="sm"
@@ -353,6 +409,7 @@ const Home: React.FC = () => {
         >
           منصة "رفيقك" كشريك استراتيجي يقدم حلولاً متكاملة تجمع بين الوعي الإنساني والكفاءة المهنية لمختلف فئات المجتمع المؤسسي والتعليمي.
         </motion.p>
+        </div>
       </header>
 
       {/* Main Section */}
