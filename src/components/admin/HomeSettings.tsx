@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
+import * as Icons from 'lucide-react';
 import { Plus, Trash2, Camera, Save, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { compressImage, getBase64Size } from '@/lib/imageUtils';
@@ -162,22 +163,39 @@ export const HomeSettings: React.FC = () => {
     });
   };
 
+  const IconWrapper = ({ children, colorClass }: { children: React.ReactNode, colorClass: string }) => (
+    <div className={`relative p-2 rounded-lg overflow-hidden group/icon ${colorClass}`}>
+      <div className="absolute top-0 right-0 w-4 h-4 bg-white/20 rotate-45 translate-x-2 -translate-y-2 group-hover/icon:scale-150 transition-transform" />
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+
   if (loading) return <div className="p-8 text-center"><RefreshCw className="animate-spin inline-block mr-2" /> جاري التحميل...</div>;
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">إعدادات الصفحة الرئيسية</h2>
-        <Button onClick={handleSave} disabled={saving} className="rounded-full px-8">
+        <div className="flex items-center gap-3">
+          <IconWrapper colorClass="bg-primary/10 text-primary">
+            <Icons.Settings className="h-6 w-6" />
+          </IconWrapper>
+          <h2 className="text-2xl font-bold">إعدادات الصفحة الرئيسية</h2>
+        </div>
+        <Button onClick={handleSave} disabled={saving} className="rounded-full px-8 shadow-lg hover:scale-105 transition-all">
           {saving ? <RefreshCw className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
           حفظ التغييرات
         </Button>
       </div>
 
       {/* Announcements Section */}
-      <Card className="rounded-3xl border-none shadow-sm glass-card">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl">شريط الإعلانات المتحرك</CardTitle>
+      <Card className="rounded-3xl border-none shadow-sm glass-card overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-white/10 bg-white/5">
+          <div className="flex items-center gap-3">
+            <IconWrapper colorClass="bg-blue-500/10 text-blue-600">
+              <Icons.Megaphone className="h-5 w-5" />
+            </IconWrapper>
+            <CardTitle className="text-xl">شريط الإعلانات المتحرك</CardTitle>
+          </div>
           <div className="flex items-center gap-4">
             <Label htmlFor="ticker-active">تفعيل</Label>
             <Switch 
@@ -190,9 +208,12 @@ export const HomeSettings: React.FC = () => {
             />
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 pt-6">
           <div className="space-y-4">
-            <Label>سرعة الشريط (ثواني)</Label>
+            <div className="flex justify-between items-center">
+              <Label>سرعة الشريط (مستوى السرعة)</Label>
+              <span className="text-xs font-medium text-muted-foreground">كلما زاد الرقم كان الشريط أسرع</span>
+            </div>
             <div className="flex items-center gap-4">
               <Slider 
                 value={[settings.announcements.speed || 20]} 
@@ -205,14 +226,19 @@ export const HomeSettings: React.FC = () => {
                 })}
                 className="flex-1"
               />
-              <span className="font-bold w-12">{settings.announcements.speed}s</span>
+              <span className="font-bold w-12 text-center bg-primary/10 rounded-lg py-1">{settings.announcements.speed}</span>
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label>نصوص الإعلانات</Label>
-              <Button size="sm" variant="outline" onClick={addAnnouncement} className="rounded-full">
+              <div className="flex items-center gap-2">
+                <IconWrapper colorClass="bg-blue-500/10 text-blue-600">
+                  <Icons.List className="h-4 w-4" />
+                </IconWrapper>
+                <Label className="font-bold">نصوص الإعلانات</Label>
+              </div>
+              <Button size="sm" variant="outline" onClick={addAnnouncement} className="rounded-full hover:bg-blue-50 border-blue-200 text-blue-700">
                 <Plus className="h-4 w-4 mr-1" /> إضافة إعلان
               </Button>
             </div>
@@ -234,50 +260,67 @@ export const HomeSettings: React.FC = () => {
       </Card>
 
       {/* Hero Slides Section */}
-      <Card className="rounded-3xl border-none shadow-sm glass-card">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl">معرض الصور العلوي (Hero Carousel)</CardTitle>
-          <Button size="sm" variant="outline" onClick={addSlide} className="rounded-full">
+      <Card className="rounded-3xl border-none shadow-sm glass-card overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-white/10 bg-white/5">
+          <div className="flex items-center gap-3">
+            <IconWrapper colorClass="bg-emerald-500/10 text-emerald-600">
+              <Icons.Image className="h-5 w-5" />
+            </IconWrapper>
+            <CardTitle className="text-xl">معرض الصور العلوي (Hero Carousel)</CardTitle>
+          </div>
+          <Button size="sm" variant="outline" onClick={addSlide} className="rounded-full hover:bg-emerald-50 border-emerald-200 text-emerald-700">
             <Plus className="h-4 w-4 mr-1" /> إضافة صورة
           </Button>
         </CardHeader>
-        <CardContent className="space-y-8">
+        <CardContent className="space-y-8 pt-6">
           {settings.hero_slides.map((slide: any) => (
-            <div key={slide.id} className="p-6 rounded-2xl border bg-white/50 space-y-6 relative group">
+            <div key={slide.id} className="p-6 rounded-3xl border bg-white/40 backdrop-blur-sm space-y-6 relative group border-white/20 shadow-sm hover:shadow-md transition-all">
               <Button 
                 size="icon" 
                 variant="ghost" 
                 onClick={() => removeSlide(slide.id)} 
-                className="absolute top-2 left-2 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-4 left-4 text-destructive opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-destructive hover:text-white rounded-full shadow-sm"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="space-y-4">
-                  <Label>الصورة</Label>
-                  <div className="aspect-video rounded-xl overflow-hidden bg-muted relative border-2 border-dashed border-primary/20">
-                    <img src={slide.image} alt="" className="w-full h-full object-cover" />
-                    <Button 
-                      size="sm" 
-                      variant="secondary" 
-                      className="absolute inset-0 m-auto w-fit h-fit rounded-full shadow-lg"
-                      onClick={() => handleSlideImageUpload(slide.id)}
-                    >
-                      <Camera className="h-4 w-4 mr-2" /> تغيير الصورة
-                    </Button>
+                  <div className="flex items-center gap-2">
+                    <IconWrapper colorClass="bg-blue-500/10 text-blue-600">
+                      <Camera className="h-4 w-4" />
+                    </IconWrapper>
+                    <Label className="font-bold">الصورة</Label>
+                  </div>
+                  <div className="aspect-video rounded-2xl overflow-hidden bg-muted relative border-2 border-dashed border-primary/20 group/img">
+                    <img src={slide.image} alt="" className="w-full h-full object-cover transition-transform group-hover/img:scale-105" />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button 
+                        size="sm" 
+                        variant="secondary" 
+                        className="rounded-full shadow-lg"
+                        onClick={() => handleSlideImageUpload(slide.id)}
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" /> تغيير الصورة
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
                 <div className="md:col-span-2 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <Label>العنوان (عربي)</Label>
+                        <div className="flex items-center gap-2">
+                          <IconWrapper colorClass="bg-primary/10 text-primary">
+                            <Icons.Type className="h-4 w-4" />
+                          </IconWrapper>
+                          <Label className="font-bold">العنوان (عربي)</Label>
+                        </div>
                         <Button 
                           size="sm" 
                           variant="ghost" 
-                          className="h-6 text-[10px] rounded-full"
+                          className="h-7 text-[10px] rounded-full bg-primary/5 hover:bg-primary/10"
                           onClick={() => handleAutoTranslate(slide.id, 'title', slide.title.ar)}
                           disabled={translating === `${slide.id}-title`}
                         >
@@ -287,27 +330,37 @@ export const HomeSettings: React.FC = () => {
                       <Input 
                         value={slide.title.ar} 
                         onChange={(e) => updateSlide(slide.id, 'title', { ...slide.title, ar: e.target.value })}
-                        className="rounded-xl"
+                        className="rounded-xl border-white/40 bg-white/50"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>العنوان (English)</Label>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <IconWrapper colorClass="bg-slate-500/10 text-slate-600">
+                          <Icons.Languages className="h-4 w-4" />
+                        </IconWrapper>
+                        <Label className="font-bold">العنوان (English)</Label>
+                      </div>
                       <Input 
                         value={slide.title.en} 
                         onChange={(e) => updateSlide(slide.id, 'title', { ...slide.title, en: e.target.value })}
-                        className="rounded-xl"
+                        className="rounded-xl border-white/40 bg-white/50"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <Label>الوصف (عربي)</Label>
+                        <div className="flex items-center gap-2">
+                          <IconWrapper colorClass="bg-primary/10 text-primary">
+                            <Icons.AlignRight className="h-4 w-4" />
+                          </IconWrapper>
+                          <Label className="font-bold">الوصف (عربي)</Label>
+                        </div>
                         <Button 
                           size="sm" 
                           variant="ghost" 
-                          className="h-6 text-[10px] rounded-full"
+                          className="h-7 text-[10px] rounded-full bg-primary/5 hover:bg-primary/10"
                           onClick={() => handleAutoTranslate(slide.id, 'description', slide.description.ar)}
                           disabled={translating === `${slide.id}-description`}
                         >
@@ -317,21 +370,31 @@ export const HomeSettings: React.FC = () => {
                       <Input 
                         value={slide.description.ar} 
                         onChange={(e) => updateSlide(slide.id, 'description', { ...slide.description, ar: e.target.value })}
-                        className="rounded-xl"
+                        className="rounded-xl border-white/40 bg-white/50"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>الوصف (English)</Label>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <IconWrapper colorClass="bg-slate-500/10 text-slate-600">
+                          <Icons.AlignLeft className="h-4 w-4" />
+                        </IconWrapper>
+                        <Label className="font-bold">الوصف (English)</Label>
+                      </div>
                       <Input 
                         value={slide.description.en} 
                         onChange={(e) => updateSlide(slide.id, 'description', { ...slide.description, en: e.target.value })}
-                        className="rounded-xl"
+                        className="rounded-xl border-white/40 bg-white/50"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>فترة العرض (ثواني)</Label>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <IconWrapper colorClass="bg-orange-500/10 text-orange-600">
+                        <Icons.Clock className="h-4 w-4" />
+                      </IconWrapper>
+                      <Label className="font-bold">فترة العرض (ثواني)</Label>
+                    </div>
                     <div className="flex items-center gap-4">
                       <Slider 
                         value={[slide.interval || 5]} 
@@ -341,7 +404,7 @@ export const HomeSettings: React.FC = () => {
                         onValueChange={(val: any) => updateSlide(slide.id, 'interval', Array.isArray(val) ? val[0] : val)}
                         className="flex-1"
                       />
-                      <span className="font-bold w-12">{slide.interval}s</span>
+                      <span className="font-bold w-12 text-center bg-orange-500/10 rounded-lg py-1">{slide.interval}s</span>
                     </div>
                   </div>
                 </div>

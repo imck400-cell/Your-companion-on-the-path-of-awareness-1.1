@@ -21,54 +21,75 @@ const AdminDashboard: React.FC = () => {
     return profile?.permissions?.includes('all') || profile?.permissions?.includes(featureId);
   };
 
+  const IconWrapper = ({ children, colorClass }: { children: React.ReactNode, colorClass: string }) => (
+    <div className={`relative p-1.5 rounded-md overflow-hidden group/icon ${colorClass} mr-2`}>
+      <div className="absolute top-0 right-0 w-3 h-3 bg-white/20 rotate-45 translate-x-1.5 -translate-y-1.5 group-hover/icon:scale-150 transition-transform" />
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-heading font-bold">{t('admin_panel')}</h1>
+        <h1 className="text-3xl font-heading font-bold text-primary">{t('admin_panel')}</h1>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 bg-transparent h-auto">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="flex flex-wrap gap-3 bg-transparent h-auto p-0 justify-start">
           {hasPermission('overview') && (
-            <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <LayoutDashboard className="h-4 w-4 mr-2" />
+            <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl px-6 py-3 shadow-sm border bg-white/50 backdrop-blur-sm transition-all hover:bg-white">
+              <IconWrapper colorClass="bg-blue-500/10 text-blue-600 group-data-[state=active]/icon:bg-white/20 group-data-[state=active]/icon:text-white">
+                <LayoutDashboard className="h-4 w-4" />
+              </IconWrapper>
               {t('dashboard')}
             </TabsTrigger>
           )}
           {hasPermission('pages') && (
-            <TabsTrigger value="pages" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <FileText className="h-4 w-4 mr-2" />
+            <TabsTrigger value="pages" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl px-6 py-3 shadow-sm border bg-white/50 backdrop-blur-sm transition-all hover:bg-white">
+              <IconWrapper colorClass="bg-emerald-500/10 text-emerald-600 group-data-[state=active]/icon:bg-white/20 group-data-[state=active]/icon:text-white">
+                <FileText className="h-4 w-4" />
+              </IconWrapper>
               إدارة المحتوى
             </TabsTrigger>
           )}
           {hasPermission('analytics') && (
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <BarChart3 className="h-4 w-4 mr-2" />
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl px-6 py-3 shadow-sm border bg-white/50 backdrop-blur-sm transition-all hover:bg-white">
+              <IconWrapper colorClass="bg-purple-500/10 text-purple-600 group-data-[state=active]/icon:bg-white/20 group-data-[state=active]/icon:text-white">
+                <BarChart3 className="h-4 w-4" />
+              </IconWrapper>
               {t('analytics')}
             </TabsTrigger>
           )}
           {hasPermission('tickets') && (
-            <TabsTrigger value="tickets" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <MessageSquare className="h-4 w-4 mr-2" />
+            <TabsTrigger value="tickets" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl px-6 py-3 shadow-sm border bg-white/50 backdrop-blur-sm transition-all hover:bg-white">
+              <IconWrapper colorClass="bg-orange-500/10 text-orange-600 group-data-[state=active]/icon:bg-white/20 group-data-[state=active]/icon:text-white">
+                <MessageSquare className="h-4 w-4" />
+              </IconWrapper>
               {t('tickets')}
             </TabsTrigger>
           )}
           {hasPermission('ads') && (
-            <TabsTrigger value="ads" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Megaphone className="h-4 w-4 mr-2" />
+            <TabsTrigger value="ads" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl px-6 py-3 shadow-sm border bg-white/50 backdrop-blur-sm transition-all hover:bg-white">
+              <IconWrapper colorClass="bg-pink-500/10 text-pink-600 group-data-[state=active]/icon:bg-white/20 group-data-[state=active]/icon:text-white">
+                <Megaphone className="h-4 w-4" />
+              </IconWrapper>
               {t('ads')}
             </TabsTrigger>
           )}
-          {hasPermission('settings') && (
-            <TabsTrigger value="settings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Settings className="h-4 w-4 mr-2" />
-              {t('settings')}
+          {hasPermission('home_settings') && (
+            <TabsTrigger value="home_settings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl px-6 py-3 shadow-sm border bg-white/50 backdrop-blur-sm transition-all hover:bg-white border-primary/30">
+              <IconWrapper colorClass="bg-primary/10 text-primary group-data-[state=active]/icon:bg-white/20 group-data-[state=active]/icon:text-white">
+                <Settings className="h-4 w-4" />
+              </IconWrapper>
+              إعدادات الواجهة
             </TabsTrigger>
           )}
-          {hasPermission('home_settings') && (
-            <TabsTrigger value="home_settings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <LayoutDashboard className="h-4 w-4 mr-2" />
-              إعدادات الواجهة
+          {hasPermission('settings') && (
+            <TabsTrigger value="settings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl px-6 py-3 shadow-sm border bg-white/50 backdrop-blur-sm transition-all hover:bg-white">
+              <IconWrapper colorClass="bg-slate-500/10 text-slate-600 group-data-[state=active]/icon:bg-white/20 group-data-[state=active]/icon:text-white">
+                <Settings className="h-4 w-4" />
+              </IconWrapper>
+              {t('settings')}
             </TabsTrigger>
           )}
         </TabsList>

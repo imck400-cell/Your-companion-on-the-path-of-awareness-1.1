@@ -17,6 +17,10 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
   // Duplicate items to ensure smooth infinite scroll
   const displayItems = [...items, ...items, ...items];
   
+  // Invert speed logic: higher value = faster
+  // speed range 5-60. duration = (70 - speed)
+  const duration = Math.max(5, 70 - speed);
+  
   const colors = [
     'bg-blue-500/20 text-blue-700 border-blue-500/30',
     'bg-emerald-500/20 text-emerald-700 border-emerald-500/30',
@@ -31,7 +35,7 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
         className="flex whitespace-nowrap gap-6"
         animate={{ x: ["-33.33%", "0%"] }}
         transition={{ 
-          duration: speed * 2, 
+          duration: duration, 
           repeat: Infinity, 
           ease: "linear" 
         }}

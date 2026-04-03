@@ -83,20 +83,20 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides = [], lang = 
           <img 
             src={currentSlide.image} 
             alt="" 
-            className="w-full h-full object-contain bg-black/5"
+            className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-16 text-white text-right">
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4 md:p-12 text-white text-right">
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="space-y-4 max-w-3xl ml-auto"
+              className="space-y-2 max-w-2xl ml-auto bg-black/20 backdrop-blur-xs p-4 rounded-2xl md:bg-transparent md:backdrop-blur-none md:p-0"
             >
-              <h2 className="text-3xl md:text-6xl font-heading font-bold leading-tight">
+              <h2 className="text-xl md:text-5xl font-heading font-bold leading-tight">
                 {currentSlide.title?.[lang] || currentSlide.title?.ar}
               </h2>
-              <p className="text-lg md:text-2xl text-white/80 font-light leading-relaxed">
+              <p className="text-sm md:text-xl text-white/90 font-light leading-relaxed line-clamp-2 md:line-clamp-none">
                 {currentSlide.description?.[lang] || currentSlide.description?.ar}
               </p>
             </motion.div>
