@@ -26,50 +26,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Redirect result error:', error);
     });
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        const docRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          setProfile(docSnap.data());
-        } else {
-          // Create default profile
-          const newProfile = {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-            role: user.email === 'imck400@gmail.com' ? 'super_admin' : 'user',
-            permissions: user.email === 'imck400@gmail.com' ? ['all'] : [],
-            expiryDate: null,
-            createdAt: new Date().toISOString()
-          };
-          await setDoc(docRef, newProfile);
-          setProfile(newProfile);
-        }
-      } else {
-        setProfile(null);
-      }
+    // Safety timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
       setLoading(false);
+    }, 5000);
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      try {
+        setUser(user);
+        if (user) {
+          const docRef = doc(db, 'users', user.uid);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            setProfile(docSnap.data());
+          } else {
+            // Create default profile
+            const newProfile = {
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL,
+              role: user.email === 'imck400@gmail.com' ? 'super_admin' : 'user',
+              permissions: user.email === 'imck400@gmail.com' ? ['all'] : [],
+              expiryDate: null,
+              createdAt: new Date().toISOString()
+            };
+            await setDoc(docRef, newProfile);
+            setProfile(newProfile);
+          }
+        } else {
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error('Auth state change error:', error);
+      } finally {
+        setLoading(false);
+        clearTimeout(timeoutId);
+      }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const login = async () => {
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    
     try {
+      // Try popup first
       await signInWithPopup(auth, provider);
     } catch (error: any) {
       console.error('Login error:', error);
-      if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
-        // Fallback to redirect if popup is blocked
-        const { signInWithRedirect } = await import('firebase/auth');
-        await signInWithRedirect(auth, provider);
+      
+      // If popup is blocked or cancelled, try redirect
+      if (
+        error.code === 'auth/popup-blocked' || 
+        error.code === 'auth/cancelled-popup-request' ||
+        error.code === 'auth/popup-closed-by-user'
+      ) {
+        try {
+          const { signInWithRedirect } = await import('firebase/auth');
+          await signInWithRedirect(auth, provider);
+        } catch (redirectError: any) {
+          console.error('Redirect error:', redirectError);
+          alert('تعذر فتح نافذة تسجيل الدخول. يرجى التأكد من السماح بالنوافذ المنبثقة أو فتح التطبيق في نافذة جديدة.');
+        }
+      } else if (error.code === 'auth/network-request-failed') {
+        alert('خطأ في الاتصال بالشبكة. يرجى المحاولة مرة أخرى.');
       } else {
-        throw error;
+        alert(`حدث خطأ أثناء تسجيل الدخول: ${error.message}`);
       }
     }
   };

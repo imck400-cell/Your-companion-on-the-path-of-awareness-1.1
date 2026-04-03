@@ -97,6 +97,9 @@ const Home: React.FC = () => {
         setSiteSettings(docSnap.data());
       }
       setLoading(false);
+    }, (error) => {
+      console.error('Site settings error:', error);
+      setLoading(false);
     });
 
     return () => {
