@@ -49,7 +49,7 @@ export const QuickNav: React.FC = () => {
 
         {/* Platform Areas Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="flex items-center gap-2 whitespace-nowrap" />} nativeButton={false}>
+          <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="flex items-center gap-2 whitespace-nowrap" />}>
             <LayoutGrid className="h-4 w-4" />
             <span>{language === 'ar' ? 'مجالات المنصة' : 'Platform Areas'}</span>
           </DropdownMenuTrigger>

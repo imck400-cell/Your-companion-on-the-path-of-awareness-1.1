@@ -50,7 +50,7 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center gap-2">
           {/* Language Toggle */}
           <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />} nativeButton={false}>
+            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
               <Languages className="h-5 w-5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -64,7 +64,7 @@ export const Navbar: React.FC = () => {
 
           {/* Theme Toggle */}
           <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />} nativeButton={false}>
+            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
               {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -79,7 +79,7 @@ export const Navbar: React.FC = () => {
           {/* Auth / Profile */}
           {user ? (
             <DropdownMenu>
-              <DropdownMenuTrigger render={<Button variant="ghost" className="relative h-8 w-8 rounded-full" />} nativeButton={false}>
+              <DropdownMenuTrigger render={<Button variant="ghost" className="relative h-8 w-8 rounded-full" />}>
                 <img src={user.photoURL || ''} alt={user.displayName || ''} className="h-8 w-8 rounded-full" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
