@@ -11,7 +11,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { DEFAULT_HUBS } from '@/data/defaultPages';
 import { useAuth } from '@/context/AuthContext';
+import { compressImage, getBase64Size } from '@/lib/imageUtils';
 import * as Icons from 'lucide-react';
+
+import { handleFirestoreError, OperationType } from '@/lib/firestoreErrorHandler';
 
 const Home: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -26,36 +29,63 @@ const Home: React.FC = () => {
     
     const seedDefaultPages = async () => {
       const pagesRef = collection(db, 'pages');
-      for (const hub of DEFAULT_HUBS) {
-        const docRef = doc(db, 'pages', hub.slug);
-        const docSnap = await getDoc(docRef);
-        if (!docSnap.exists()) {
-          await setDoc(docRef, {
-            ...hub,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
-        } else {
-          // Update existing hubs if they are missing images or items
-          const data = docSnap.data();
-          if (!data.items || data.items.some((item: any) => !item.image)) {
-            await updateDoc(docRef, {
-              items: hub.items,
+      try {
+        const snapshot = await getDocs(pagesRef);
+        
+        // Only seed if the collection is empty
+        if (snapshot.empty) {
+          for (const hub of DEFAULT_HUBS) {
+            const docRef = doc(db, 'pages', hub.slug);
+            await setDoc(docRef, {
+              ...hub,
+              createdAt: serverTimestamp(),
               updatedAt: serverTimestamp()
             });
           }
         }
+      } catch (error) {
+        handleFirestoreError(error, OperationType.GET, 'pages');
       }
     };
     seedDefaultPages();
 
     const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setHubs(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+      if (!snapshot.empty) {
+        setHubs(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+      }
       setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'pages');
     });
     return () => unsubscribe();
   }, []);
+
+  const handleSyncWithDefaults = async () => {
+    if (!isSuperAdmin) return;
+    
+    const confirmSync = window.confirm(lang === 'ar' ? 'هل أنت متأكد من رغبتك في إعادة ضبط جميع الصفحات إلى الإعدادات الافتراضية؟ سيؤدي هذا إلى مسح جميع التعديلات الحالية.' : 'Are you sure you want to reset all pages to defaults? This will erase all current modifications.');
+    
+    if (!confirmSync) return;
+
+    setLoading(true);
+    try {
+      for (const hub of DEFAULT_HUBS) {
+        const docRef = doc(db, 'pages', hub.slug);
+        await setDoc(docRef, {
+          ...hub,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      }
+      toast.success(lang === 'ar' ? 'تمت المزامنة مع الإعدادات الافتراضية بنجاح' : 'Synced with defaults successfully');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'pages');
+      toast.error(lang === 'ar' ? 'فشلت المزامنة' : 'Sync failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const lang = i18n.language.startsWith('ar') ? 'ar' : 'en';
   const hasFullPermissions = isSuperAdmin || profile?.permissions?.includes('all');
@@ -68,36 +98,44 @@ const Home: React.FC = () => {
       const file = e.target.files[0];
       if (!file) return;
 
-      // Check file size (limit to 1MB for base64 in Firestore)
-      if (file.size > 1024 * 1024) {
-        toast.error(lang === 'ar' ? 'حجم الملف كبير جداً (الحد الأقصى 1 ميجابايت)' : 'File size too large (Max 1MB)');
+      // Initial check to prevent extremely large files (e.g., 10MB+) from crashing the browser
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(lang === 'ar' ? 'حجم الملف كبير جداً (الحد الأقصى 5 ميجابايت)' : 'File size too large (Max 5MB)');
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        try {
-          const docRef = doc(db, 'pages', hubId);
-          if (itemId) {
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-              const data = docSnap.data();
-              const updatedItems = data.items.map((item: any) => 
-                item.id === itemId ? { ...item, image: base64String } : item
-              );
-              await updateDoc(docRef, { items: updatedItems, updatedAt: serverTimestamp() });
-            }
-          } else {
-            await updateDoc(docRef, { image: base64String, updatedAt: serverTimestamp() });
+      try {
+        const base64String = await compressImage(file, 1000, 750, 0.6);
+        const size = getBase64Size(base64String);
+        
+        // Final check for compressed size (aim for < 200KB per image)
+        if (size > 300 * 1024) {
+          toast.error(lang === 'ar' ? 'الصورة لا تزال كبيرة جداً، يرجى اختيار صورة أصغر' : 'Image is still too large, please choose a smaller one');
+          return;
+        }
+
+        const docRef = doc(db, 'pages', hubId);
+        if (itemId) {
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const updatedItems = data.items.map((item: any) => 
+              item.id === itemId ? { ...item, image: base64String } : item
+            );
+            await updateDoc(docRef, { items: updatedItems, updatedAt: serverTimestamp() });
           }
-          toast.success(lang === 'ar' ? 'تم تحديث الصورة بنجاح' : 'Image updated successfully');
-        } catch (error) {
-          console.error('Error updating image:', error);
+        } else {
+          await updateDoc(docRef, { image: base64String, updatedAt: serverTimestamp() });
+        }
+        toast.success(lang === 'ar' ? 'تم تحديث الصورة بنجاح' : 'Image updated successfully');
+      } catch (error: any) {
+        if (error.message?.includes('exceeds the maximum allowed size')) {
+          toast.error(lang === 'ar' ? 'فشل التحديث: حجم الصفحة تجاوز الحد المسموح به في قاعدة البيانات' : 'Update failed: Page size exceeded database limit');
+        } else {
+          handleFirestoreError(error, OperationType.WRITE, `pages/${hubId}`);
           toast.error(lang === 'ar' ? 'فشل تحديث الصورة' : 'Failed to update image');
         }
-      };
-      reader.readAsDataURL(file);
+      }
     };
     input.click();
   };
@@ -239,7 +277,7 @@ const Home: React.FC = () => {
                     transition={{ delay: itemIndex * 0.03 }}
                     onClick={() => navigate(`/p/${selectedHub.slug}/${item.id}`)}
                   >
-                    <Card className={`hover:shadow-xl transition-all cursor-pointer group h-full border-2 ${color.border} ${color.bg} ${color.shadow} glass-card rounded-2xl overflow-hidden relative p-0 py-0 ring-0 shadow-none`}>
+                    <Card className={`hover:shadow-xl transition-all cursor-pointer group h-full border-2 ${color.border} ${color.bg} ${color.shadow} glass-card rounded-2xl overflow-hidden relative p-0 py-0 ring-0 shadow-none flex flex-col`}>
                       {hasFullPermissions && (
                         <Button
                           size="icon"
@@ -253,7 +291,7 @@ const Home: React.FC = () => {
                           <Icons.Camera className="h-4 w-4" />
                         </Button>
                       )}
-                      <div className="aspect-video relative overflow-hidden w-full border-b-2 border-inherit">
+                      <div className="aspect-video relative overflow-hidden w-full">
                         <img 
                           src={item.image || `https://picsum.photos/seed/${item.id}/400/300`} 
                           alt={item.title?.[lang] || item.title?.ar}
@@ -264,8 +302,8 @@ const Home: React.FC = () => {
                           <span className="text-white text-xs font-bold">{lang === 'ar' ? 'عرض التفاصيل' : 'View Details'}</span>
                         </div>
                       </div>
-                      <CardContent className="p-4 pt-4">
-                        <h3 className={`font-heading font-bold text-lg group-hover:scale-105 transition-transform text-center ${color.text}`}>
+                      <CardContent className="p-4 pt-4 flex-1 flex flex-col justify-center">
+                        <h3 className={`font-heading font-bold text-lg group-hover:scale-105 transition-transform text-center leading-tight ${color.text}`}>
                           {item.title?.[lang] || item.title?.ar}
                         </h3>
                       </CardContent>
@@ -283,7 +321,18 @@ const Home: React.FC = () => {
   return (
     <div className="space-y-16 pb-20 pt-8">
       {/* Header */}
-      <header className="text-center space-y-6 max-w-5xl mx-auto glass-card p-6 md:p-12 rounded-2xl md:rounded-[3rem]">
+      <header className="text-center space-y-6 max-w-5xl mx-auto glass-card p-6 md:p-12 rounded-2xl md:rounded-[3rem] relative">
+        {isSuperAdmin && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="absolute top-4 right-4 rounded-full opacity-50 hover:opacity-100"
+            onClick={handleSyncWithDefaults}
+          >
+            <Icons.RefreshCw className="h-4 w-4 mr-2" />
+            {lang === 'ar' ? 'مزامنة مع الافتراضي' : 'Sync with Defaults'}
+          </Button>
+        )}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

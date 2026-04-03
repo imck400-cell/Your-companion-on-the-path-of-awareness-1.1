@@ -12,6 +12,9 @@ import { ChevronRight, ChevronLeft, Users, Camera } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from 'sonner';
+import { compressImage, getBase64Size } from '@/lib/imageUtils';
+
+import { handleFirestoreError, OperationType } from '@/lib/firestoreErrorHandler';
 
 const DynamicPage: React.FC = () => {
   const { slug, itemId } = useParams<{ slug: string; itemId?: string }>();
@@ -50,7 +53,7 @@ const DynamicPage: React.FC = () => {
           navigate('/');
         }
       } catch (error) {
-        console.error('Error fetching page:', error);
+        handleFirestoreError(error, OperationType.GET, `pages/${slug}`);
         navigate('/');
       } finally {
         setLoading(false);
@@ -88,28 +91,37 @@ const DynamicPage: React.FC = () => {
       const file = e.target.files[0];
       if (!file) return;
 
-      if (file.size > 1024 * 1024) {
-        toast.error(lang === 'ar' ? 'حجم الملف كبير جداً (الحد الأقصى 1 ميجابايت)' : 'File size too large (Max 1MB)');
+      // Initial check to prevent extremely large files from crashing the browser
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(lang === 'ar' ? 'حجم الملف كبير جداً (الحد الأقصى 5 ميجابايت)' : 'File size too large (Max 5MB)');
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        try {
-          const docRef = doc(db, 'pages', page.id);
-          const updatedItems = page.items.map((item: any) => 
-            item.id === itemId ? { ...item, image: base64String } : item
-          );
-          await updateDoc(docRef, { items: updatedItems, updatedAt: serverTimestamp() });
-          setPage({ ...page, items: updatedItems });
-          toast.success(lang === 'ar' ? 'تم تحديث الصورة بنجاح' : 'Image updated successfully');
-        } catch (error) {
-          console.error('Error updating image:', error);
+      try {
+        const base64String = await compressImage(file, 1000, 750, 0.6);
+        const size = getBase64Size(base64String);
+        
+        // Final check for compressed size
+        if (size > 300 * 1024) {
+          toast.error(lang === 'ar' ? 'الصورة لا تزال كبيرة جداً، يرجى اختيار صورة أصغر' : 'Image is still too large, please choose a smaller one');
+          return;
+        }
+
+        const docRef = doc(db, 'pages', page.id);
+        const updatedItems = page.items.map((item: any) => 
+          item.id === itemId ? { ...item, image: base64String } : item
+        );
+        await updateDoc(docRef, { items: updatedItems, updatedAt: serverTimestamp() });
+        setPage({ ...page, items: updatedItems });
+        toast.success(lang === 'ar' ? 'تم تحديث الصورة بنجاح' : 'Image updated successfully');
+      } catch (error: any) {
+        console.error('Error updating image:', error);
+        if (error.message?.includes('exceeds the maximum allowed size')) {
+          toast.error(lang === 'ar' ? 'فشل التحديث: حجم الصفحة تجاوز الحد المسموح به في قاعدة البيانات' : 'Update failed: Page size exceeded database limit');
+        } else {
           toast.error(lang === 'ar' ? 'فشل تحديث الصورة' : 'Failed to update image');
         }
-      };
-      reader.readAsDataURL(file);
+      }
     };
     input.click();
   };
