@@ -55,7 +55,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error: any) {
+      console.error('Login error:', error);
+      if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
+        // Fallback to redirect if popup is blocked
+        const { signInWithRedirect } = await import('firebase/auth');
+        await signInWithRedirect(auth, provider);
+      } else {
+        throw error;
+      }
+    }
   };
 
   const logout = async () => {

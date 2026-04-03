@@ -163,37 +163,37 @@ const DynamicPage: React.FC = () => {
 
   return (
     <div className="space-y-16 py-12 px-4 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 border-b border-primary/5 pb-16">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-8 border-b border-primary/5 pb-8 md:pb-16">
         {/* Left: Back Button */}
-        <div className="shrink-0">
+        <div className="shrink-0 w-full md:w-auto">
           <Button 
             variant="outline" 
             onClick={() => navigate('/')}
-            className="rounded-full px-8 py-6 border-primary/10 hover:bg-primary/5 shadow-sm text-lg font-medium"
+            className="rounded-full w-full md:w-auto px-6 md:px-8 py-4 md:py-6 border-primary/10 hover:bg-primary/5 shadow-sm text-base md:text-lg font-medium"
           >
             {lang === 'ar' ? <ChevronRight className="ml-2 h-5 w-5" /> : <ChevronLeft className="mr-2 h-5 w-5" />}
-            {lang === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}
+            {lang === 'ar' ? 'الرئيسية' : 'Home'}
           </Button>
         </div>
 
         {/* Center/Right: Title and Description */}
-        <div className="flex-1 flex flex-col md:flex-row items-center md:justify-end gap-12">
-          <div className="text-center md:text-right space-y-4">
+        <div className="flex-1 flex flex-col md:flex-row items-center md:justify-end gap-6 md:gap-12 w-full">
+          <div className="text-center md:text-right space-y-2 md:space-y-4 w-full">
             <motion.h1 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl md:text-7xl font-heading font-bold text-primary tracking-tight leading-tight"
+              className="text-3xl md:text-7xl font-heading font-bold text-primary tracking-tight leading-tight"
             >
               {page.title?.[lang] || page.title?.ar || 'بدون عنوان'}
             </motion.h1>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl leading-relaxed font-medium">
+            <p className="text-base md:text-2xl text-muted-foreground max-w-2xl leading-relaxed font-medium mx-auto md:ml-0">
               {page.description?.[lang] || page.description?.ar}
             </p>
           </div>
 
           {/* Far Right: Icon/Rafiq */}
           <div className="flex flex-col items-center gap-4 shrink-0">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-[3rem] bg-muted/40 flex items-center justify-center overflow-hidden border-8 border-white shadow-2xl relative group">
+            <div className="w-24 h-24 md:w-40 md:h-40 rounded-2xl md:rounded-[3rem] bg-muted/40 flex items-center justify-center overflow-hidden border-4 md:border-8 border-white shadow-xl md:shadow-2xl relative group">
               {page.image ? (
                 <img 
                   src={page.image} 
@@ -202,10 +202,10 @@ const DynamicPage: React.FC = () => {
                   referrerPolicy="no-referrer" 
                 />
               ) : (
-                <Users className="w-16 h-16 md:w-20 md:h-20 text-primary/20" />
+                <Users className="w-10 h-10 md:w-20 md:h-20 text-primary/20" />
               )}
             </div>
-            <span className="font-bold text-lg md:text-xl text-primary whitespace-nowrap bg-white/50 px-4 py-1 rounded-full backdrop-blur-sm">
+            <span className="font-bold text-sm md:text-xl text-primary whitespace-nowrap bg-white/50 px-4 py-1 rounded-full backdrop-blur-sm">
               {lang === 'ar' ? 'رفيقك في طريق الوعي' : 'Your companion on the path of awareness'}
             </span>
           </div>
@@ -239,7 +239,7 @@ const DynamicPage: React.FC = () => {
                 transition={{ delay: index * 0.05 }}
                 onClick={() => navigate(`/p/${slug}/${item.id}`)}
               >
-                <Card className={`h-full hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] transition-all duration-500 cursor-pointer group border-[12px] border-white/90 glass-card overflow-hidden flex flex-col rounded-[3.5rem] shadow-xl relative ${color.bg} ${color.shadow}`}>
+                <Card className={`h-full hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] transition-all duration-500 cursor-pointer group border-4 md:border-[12px] border-white/90 glass-card overflow-hidden flex flex-col rounded-2xl md:rounded-[3.5rem] shadow-xl relative p-0 py-0 ring-0 ${color.bg} ${color.shadow}`}>
                   {hasFullPermissions && (
                     <Button
                       size="icon"
@@ -253,9 +253,9 @@ const DynamicPage: React.FC = () => {
                       <Camera className="h-4 w-4" />
                     </Button>
                   )}
-                  <div className={`absolute inset-0 border-2 ${color.border} rounded-[3.5rem] pointer-events-none`} />
+                  <div className={`absolute inset-0 border-2 ${color.border} rounded-2xl md:rounded-[3.5rem] pointer-events-none`} />
                   {item.image && (
-                    <div className="w-full aspect-video overflow-hidden">
+                    <div className="w-full aspect-video overflow-hidden border-b-2 border-inherit">
                       <img 
                         src={item.image} 
                         alt="" 
@@ -264,18 +264,18 @@ const DynamicPage: React.FC = () => {
                       />
                     </div>
                   )}
-                  <CardHeader className="pb-4 pt-8 px-8">
-                    <CardTitle className={`font-heading text-2xl md:text-3xl group-hover:scale-105 transition-transform line-clamp-2 leading-tight ${color.text}`}>
+                  <CardHeader className="pb-2 md:pb-4 pt-4 md:pt-8 px-4 md:px-8">
+                    <CardTitle className={`font-heading text-xl md:text-3xl group-hover:scale-105 transition-transform line-clamp-2 leading-tight ${color.text}`}>
                       {item.title?.[lang] || item.title?.ar}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="flex-1 px-8 pb-8">
-                    <p className="text-muted-foreground line-clamp-3 text-base md:text-lg leading-relaxed font-light">
+                  <CardContent className="flex-1 px-4 md:px-8 pb-4 md:pb-8">
+                    <p className="text-muted-foreground line-clamp-3 text-sm md:text-lg leading-relaxed font-light">
                       {item.content?.[lang] || item.content?.ar}
                     </p>
                   </CardContent>
-                  <div className="px-8 pb-8 mt-auto">
-                    <div className={`flex items-center text-sm font-bold group-hover:gap-3 transition-all bg-white/50 w-fit px-4 py-2 rounded-full ${color.text}`}>
+                  <div className="px-4 md:px-8 pb-4 md:pb-8 mt-auto">
+                    <div className={`flex items-center text-xs md:text-sm font-bold group-hover:gap-3 transition-all bg-white/50 w-fit px-3 md:px-4 py-1.5 md:py-2 rounded-full ${color.text}`}>
                       <span>{lang === 'ar' ? 'اقرأ المزيد' : 'Read More'}</span>
                       {lang === 'ar' ? <ChevronLeft className="h-4 w-4 mr-1" /> : <ChevronRight className="h-4 w-4 ml-1" />}
                     </div>

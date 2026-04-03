@@ -239,7 +239,7 @@ const Home: React.FC = () => {
                     transition={{ delay: itemIndex * 0.03 }}
                     onClick={() => navigate(`/p/${selectedHub.slug}/${item.id}`)}
                   >
-                    <Card className={`hover:shadow-xl transition-all cursor-pointer group h-full border-2 ${color.border} ${color.bg} ${color.shadow} glass-card rounded-2xl overflow-hidden relative`}>
+                    <Card className={`hover:shadow-xl transition-all cursor-pointer group h-full border-2 ${color.border} ${color.bg} ${color.shadow} glass-card rounded-2xl overflow-hidden relative p-0 py-0 ring-0 shadow-none`}>
                       {hasFullPermissions && (
                         <Button
                           size="icon"
@@ -253,7 +253,7 @@ const Home: React.FC = () => {
                           <Icons.Camera className="h-4 w-4" />
                         </Button>
                       )}
-                      <div className="aspect-video relative overflow-hidden">
+                      <div className="aspect-video relative overflow-hidden w-full border-b-2 border-inherit">
                         <img 
                           src={item.image || `https://picsum.photos/seed/${item.id}/400/300`} 
                           alt={item.title?.[lang] || item.title?.ar}
@@ -264,7 +264,7 @@ const Home: React.FC = () => {
                           <span className="text-white text-xs font-bold">{lang === 'ar' ? 'عرض التفاصيل' : 'View Details'}</span>
                         </div>
                       </div>
-                      <CardContent className="p-4">
+                      <CardContent className="p-4 pt-4">
                         <h3 className={`font-heading font-bold text-lg group-hover:scale-105 transition-transform text-center ${color.text}`}>
                           {item.title?.[lang] || item.title?.ar}
                         </h3>
@@ -283,16 +283,16 @@ const Home: React.FC = () => {
   return (
     <div className="space-y-16 pb-20 pt-8">
       {/* Header */}
-      <header className="text-center space-y-6 max-w-5xl mx-auto glass-card p-12 rounded-[3rem]">
+      <header className="text-center space-y-6 max-w-5xl mx-auto glass-card p-6 md:p-12 rounded-2xl md:rounded-[3rem]">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-2"
+          className="space-y-4"
         >
-          <h1 className="text-4xl md:text-6xl font-heading font-bold text-[#1E3A8A] leading-tight">
+          <h1 className="text-3xl md:text-6xl font-heading font-bold text-[#1E3A8A] leading-tight px-2">
             رفيقك في طريق الوعي
           </h1>
-          <h2 className="text-2xl md:text-4xl font-heading font-bold text-[#2D7A74] leading-tight">
+          <h2 className="text-xl md:text-4xl font-heading font-bold text-[#2D7A74] leading-tight px-2">
             المنظومة الشاملة للتطوير التربوي والإداري
           </h2>
         </motion.div>
@@ -300,23 +300,23 @@ const Home: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-lg md:text-xl text-muted-foreground leading-relaxed"
+          className="text-base md:text-xl text-muted-foreground leading-relaxed px-4"
         >
           منصة "رفيقك" كشريك استراتيجي يقدم حلولاً متكاملة تجمع بين الوعي الإنساني والكفاءة المهنية لمختلف فئات المجتمع المؤسسي والتعليمي.
         </motion.p>
       </header>
 
       {/* Main Section */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center relative py-12 glass-card px-8 rounded-[3rem]">
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 items-center relative py-8 md:py-12 glass-card px-4 md:px-8 rounded-2xl md:rounded-[3rem]">
         {/* Right Column: Tools & Services */}
-        <div className="space-y-10 order-2 lg:order-1">
-          <div className="flex items-center gap-3 mb-6">
+        <div className="space-y-8 md:space-y-10 order-2 lg:order-1">
+          <div className="flex items-center gap-3 mb-4 md:mb-6">
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
-              <Icons.Wrench className="h-6 w-6" />
+              <Icons.Wrench className="h-5 w-5 md:h-6 md:w-6" />
             </div>
-            <h2 className="text-2xl font-heading font-bold text-[#1E3A8A]">الأدوات والخدمات النوعية</h2>
+            <h2 className="text-xl md:text-2xl font-heading font-bold text-[#1E3A8A]">الأدوات والخدمات النوعية</h2>
           </div>
-          <div className="space-y-8">
+          <div className="space-y-6 md:space-y-8">
             {TOOLS_SERVICES.map((item, i) => (
               <motion.div 
                 key={i}
@@ -326,12 +326,12 @@ const Home: React.FC = () => {
                 transition={{ delay: i * 0.1 }}
                 className="flex gap-4 group"
               >
-                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-white shadow-sm border flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                  {renderIcon(item.icon, "h-6 w-6")}
+                <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-sm border flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  {renderIcon(item.icon, "h-5 w-5 md:h-6 md:w-6")}
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-bold text-lg text-[#1E3A8A]">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+                  <h3 className="font-bold text-base md:text-lg text-[#1E3A8A]">{item.title}</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{item.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -339,8 +339,8 @@ const Home: React.FC = () => {
         </div>
 
         {/* Middle Column: Visual Hub */}
-        <div className="flex justify-center order-1 lg:order-2 py-12 lg:py-0">
-          <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
+        <div className="flex justify-center order-1 lg:order-2 py-8 lg:py-0">
+          <div className="relative w-48 h-48 md:w-80 md:h-80 flex items-center justify-center">
             {/* Background Graphic (Simplified Network) */}
             <div className="absolute inset-0 opacity-20 animate-pulse">
               <svg viewBox="0 0 200 200" className="w-full h-full text-primary">
@@ -353,11 +353,11 @@ const Home: React.FC = () => {
             <motion.div 
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="relative z-10 w-48 h-48 md:w-60 md:h-60 rounded-full bg-linear-to-br from-[#1E3A8A] to-[#2D7A74] p-1 shadow-2xl"
+              className="relative z-10 w-36 h-36 md:w-60 md:h-60 rounded-full bg-linear-to-br from-[#1E3A8A] to-[#2D7A74] p-1 shadow-2xl"
             >
-              <div className="w-full h-full rounded-full bg-white flex flex-col items-center justify-center text-center p-6 border-4 border-white/20">
-                <span className="text-3xl md:text-4xl font-heading font-bold text-[#1E3A8A] mb-1">رفيقك</span>
-                <span className="text-sm md:text-base font-medium text-[#2D7A74]">في طريق الوعي</span>
+              <div className="w-full h-full rounded-full bg-white flex flex-col items-center justify-center text-center p-4 md:p-6 border-4 border-white/20">
+                <span className="text-2xl md:text-4xl font-heading font-bold text-[#1E3A8A] mb-1">رفيقك</span>
+                <span className="text-xs md:text-base font-medium text-[#2D7A74]">في طريق الوعي</span>
               </div>
             </motion.div>
             {/* Outer Rings */}
@@ -367,14 +367,14 @@ const Home: React.FC = () => {
         </div>
 
         {/* Left Column: Beneficiaries */}
-        <div className="space-y-10 order-3">
-          <div className="flex items-center gap-3 mb-6 lg:justify-end">
-            <h2 className="text-2xl font-heading font-bold text-[#1E3A8A]">فئات المستفيدين</h2>
+        <div className="space-y-8 md:space-y-10 order-3">
+          <div className="flex items-center gap-3 mb-4 md:mb-6 lg:justify-end">
+            <h2 className="text-xl md:text-2xl font-heading font-bold text-[#1E3A8A]">فئات المستفيدين</h2>
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
-              <Icons.Users className="h-6 w-6" />
+              <Icons.Users className="h-5 w-5 md:h-6 md:w-6" />
             </div>
           </div>
-          <div className="space-y-8">
+          <div className="space-y-6 md:space-y-8">
             {BENEFICIARIES.map((item, i) => (
               <motion.div 
                 key={i}
@@ -385,12 +385,12 @@ const Home: React.FC = () => {
                 onClick={() => setSelectedHubId(item.slug)}
                 className="flex gap-4 group lg:flex-row-reverse cursor-pointer"
               >
-                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-white shadow-sm border flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                  {renderIcon(item.icon, "h-6 w-6")}
+                <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-sm border flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  {renderIcon(item.icon, "h-5 w-5 md:h-6 md:w-6")}
                 </div>
                 <div className="space-y-1 lg:text-left">
-                  <h3 className="font-bold text-lg text-[#1E3A8A] group-hover:text-primary transition-colors">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+                  <h3 className="font-bold text-base md:text-lg text-[#1E3A8A] group-hover:text-primary transition-colors">{item.title}</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{item.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -399,11 +399,11 @@ const Home: React.FC = () => {
       </section>
 
       {/* Bottom Section: Cards Grid */}
-      <section className="rounded-[2.5rem] p-4 md:p-8 glass-card">
+      <section className="rounded-2xl md:rounded-[2.5rem] p-4 md:p-8 glass-card">
         <div className="flex flex-col lg:flex-row items-stretch gap-6">
           {/* Label */}
-          <div className="lg:w-48 flex items-center justify-center lg:justify-start lg:border-l-2 border-primary/10 lg:pl-6 mb-6 lg:mb-0">
-            <h2 className="text-2xl font-heading font-bold text-[#1E3A8A] text-center lg:text-right">هيكلية المحتوى المعرفي المتاح</h2>
+          <div className="lg:w-48 flex items-center justify-center lg:justify-start lg:border-l-2 border-primary/10 lg:pl-6 mb-4 md:mb-6 lg:mb-0">
+            <h2 className="text-xl md:text-2xl font-heading font-bold text-[#1E3A8A] text-center lg:text-right">هيكلية المحتوى المعرفي المتاح</h2>
           </div>
 
           {/* Cards */}

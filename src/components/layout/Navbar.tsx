@@ -43,7 +43,7 @@ export const Navbar: React.FC = () => {
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <Link to="/" className="flex items-center gap-2">
-            <span className="font-heading text-xl font-bold text-primary">رفيقك في طريق الوعي</span>
+            <span className="font-heading text-lg md:text-xl font-bold text-primary whitespace-nowrap">رفيقك في طريق الوعي</span>
           </Link>
         </div>
 
