@@ -83,7 +83,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides = [], lang = 
           <img 
             src={currentSlide.image} 
             alt="" 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain bg-black/5"
             referrerPolicy="no-referrer"
           />
           <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-16 text-white text-right">
@@ -109,7 +109,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides = [], lang = 
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-1/2 left-4 -translate-y-1/2 z-10 rounded-full bg-white/20 hover:bg-white/40 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-1/2 left-4 -translate-y-1/2 z-10 rounded-full bg-black/20 hover:bg-black/40 text-white shadow-lg border border-white/20"
             onClick={prevSlide}
           >
             <ChevronLeft className="h-8 w-8" />
@@ -117,7 +117,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides = [], lang = 
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-1/2 right-4 -translate-y-1/2 z-10 rounded-full bg-white/20 hover:bg-white/40 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-1/2 right-4 -translate-y-1/2 z-10 rounded-full bg-black/20 hover:bg-black/40 text-white shadow-lg border border-white/20"
             onClick={nextSlide}
           >
             <ChevronRight className="h-8 w-8" />

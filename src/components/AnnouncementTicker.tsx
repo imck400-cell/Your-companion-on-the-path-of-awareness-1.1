@@ -15,7 +15,7 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
   if (!active || items.length === 0) return null;
 
   // Duplicate items to ensure smooth infinite scroll
-  const displayItems = [...items, ...items];
+  const displayItems = [...items, ...items, ...items];
   
   const colors = [
     'bg-blue-500/20 text-blue-700 border-blue-500/30',
@@ -28,10 +28,10 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
   return (
     <div className="w-full bg-white/30 backdrop-blur-md border-y border-primary/5 overflow-hidden py-3 relative z-40">
       <motion.div 
-        className="flex whitespace-nowrap gap-6 px-6"
-        animate={{ x: [0, -1000] }}
+        className="flex whitespace-nowrap gap-6"
+        animate={{ x: ["-33.33%", "0%"] }}
         transition={{ 
-          duration: speed, 
+          duration: speed * 2, 
           repeat: Infinity, 
           ease: "linear" 
         }}
@@ -41,7 +41,7 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
             key={i} 
             className={`inline-flex items-center px-4 py-1.5 rounded-xl border font-bold text-sm md:text-base shadow-sm ${colors[i % colors.length]}`}
           >
-            {text}
+            {text} ...
           </div>
         ))}
       </motion.div>

@@ -366,7 +366,7 @@ const Home: React.FC = () => {
   }
 
   return (
-    <div className="space-y-16 pb-20 pt-8">
+    <div className="pb-20 pt-0">
       {siteSettings?.announcements?.active && (
         <AnnouncementTicker 
           items={siteSettings.announcements.items} 
@@ -375,12 +375,14 @@ const Home: React.FC = () => {
       )}
 
       {/* Header */}
-      <header className="text-center space-y-12 max-w-7xl mx-auto px-4">
+      <header className="text-center max-w-7xl mx-auto px-4 space-y-0">
         {siteSettings?.hero_slides?.length > 0 && (
-          <HeroCarousel slides={siteSettings.hero_slides} lang={lang} />
+          <div className="mb-8">
+            <HeroCarousel slides={siteSettings.hero_slides} lang={lang} />
+          </div>
         )}
         
-        <div className="glass-card p-6 md:p-12 rounded-2xl md:rounded-[3rem] relative max-w-5xl mx-auto">
+        <div className="glass-card p-6 md:p-12 rounded-2xl md:rounded-[3rem] relative max-w-5xl mx-auto mt-0">
           {isSuperAdmin && (
           <Button
             variant="outline"

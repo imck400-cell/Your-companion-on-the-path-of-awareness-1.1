@@ -10,6 +10,7 @@ import { Slider } from '@/components/ui/slider';
 import { Plus, Trash2, Camera, Save, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { compressImage, getBase64Size } from '@/lib/imageUtils';
+import { GoogleGenAI } from "@google/genai";
 
 export const HomeSettings: React.FC = () => {
   const [settings, setSettings] = useState<any>({
@@ -18,6 +19,36 @@ export const HomeSettings: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [translating, setTranslating] = useState<string | null>(null);
+
+  const translateText = async (text: string) => {
+    if (!text || text.trim().length < 2) return "";
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: `Translate the following Arabic text to English. Return ONLY the translated text without any explanations or quotes: "${text}"`,
+      });
+      return response.text?.trim() || "";
+    } catch (error) {
+      console.error("Translation error:", error);
+      return "";
+    }
+  };
+
+  const handleAutoTranslate = async (id: string, field: 'title' | 'description', arabicText: string) => {
+    if (!arabicText) return;
+    const loadingKey = `${id}-${field}`;
+    setTranslating(loadingKey);
+    const translated = await translateText(arabicText);
+    if (translated) {
+      const slide = settings.hero_slides.find((s: any) => s.id === id);
+      if (slide) {
+        updateSlide(id, field, { ...slide[field], en: translated });
+      }
+    }
+    setTranslating(null);
+  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -241,7 +272,18 @@ export const HomeSettings: React.FC = () => {
                 <div className="md:col-span-2 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>العنوان (عربي)</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>العنوان (عربي)</Label>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-6 text-[10px] rounded-full"
+                          onClick={() => handleAutoTranslate(slide.id, 'title', slide.title.ar)}
+                          disabled={translating === `${slide.id}-title`}
+                        >
+                          {translating === `${slide.id}-title` ? <RefreshCw className="h-3 w-3 animate-spin" /> : 'ترجمة تلقائية'}
+                        </Button>
+                      </div>
                       <Input 
                         value={slide.title.ar} 
                         onChange={(e) => updateSlide(slide.id, 'title', { ...slide.title, ar: e.target.value })}
@@ -260,7 +302,18 @@ export const HomeSettings: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>الوصف (عربي)</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>الوصف (عربي)</Label>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-6 text-[10px] rounded-full"
+                          onClick={() => handleAutoTranslate(slide.id, 'description', slide.description.ar)}
+                          disabled={translating === `${slide.id}-description`}
+                        >
+                          {translating === `${slide.id}-description` ? <RefreshCw className="h-3 w-3 animate-spin" /> : 'ترجمة تلقائية'}
+                        </Button>
+                      </div>
                       <Input 
                         value={slide.description.ar} 
                         onChange={(e) => updateSlide(slide.id, 'description', { ...slide.description, ar: e.target.value })}
