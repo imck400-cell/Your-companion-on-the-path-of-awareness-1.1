@@ -14,12 +14,8 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
 }) => {
   if (!active || items.length === 0) return null;
 
-  // Duplicate items many times to ensure smooth infinite scroll
-  // We use 4 sets of items to be safe
-  const displayItems = [...items, ...items, ...items, ...items];
-  
-  // Adjust speed logic: higher value = faster
-  // We use a duration that depends on the number of items to keep speed consistent
+  // By defining dir=ltr on the wrapper, elements flow left-to-right.
+  // Translating -100% will smoothly slide them from right to left.
   const baseDuration = 30;
   const duration = Math.max(1, (baseDuration * items.length) / (speed / 10));
   
@@ -32,16 +28,22 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
   ];
 
   return (
-    <div className="w-full bg-orange-500/5 backdrop-blur-md border-y border-orange-500/10 overflow-hidden py-2 relative z-40 h-10 md:h-12 flex items-center group">
+    <div 
+      className="w-full bg-orange-500/5 backdrop-blur-md border-y border-orange-500/10 overflow-hidden py-2 relative z-40 h-10 md:h-12 flex items-center group"
+      dir="ltr"
+    >
       <style>
         {`
           @keyframes marquee {
-            0% { transform: translateX(0%); }
-            100% { transform: translateX(-50%); }
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(0%); }
           }
           .animate-marquee {
             display: flex;
-            width: max-content;
+            flex-shrink: 0;
+            white-space: nowrap;
+            min-width: 100%;
+            justify-content: space-around;
             animation: marquee ${duration}s linear infinite;
           }
           .group:hover .animate-marquee {
@@ -49,13 +51,27 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
           }
         `}
       </style>
+      
       <div className="animate-marquee gap-8 px-4">
-        {displayItems.map((text, i) => (
+        {items.map((text, i) => (
           <div 
             key={i} 
+            dir="rtl"
             className={`inline-flex items-center px-4 py-1 rounded-full border font-bold text-xs md:text-sm shadow-xs transition-all hover:scale-105 ${colors[i % colors.length]}`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50" />
+            <span className="w-1.5 h-1.5 rounded-full bg-current ml-2 opacity-50" />
+            {text}
+          </div>
+        ))}
+      </div>
+      <div className="animate-marquee gap-8 px-4" aria-hidden="true">
+        {items.map((text, i) => (
+          <div 
+            key={`dup-${i}`} 
+            dir="rtl"
+            className={`inline-flex items-center px-4 py-1 rounded-full border font-bold text-xs md:text-sm shadow-xs transition-all hover:scale-105 ${colors[i % colors.length]}`}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-current ml-2 opacity-50" />
             {text}
           </div>
         ))}

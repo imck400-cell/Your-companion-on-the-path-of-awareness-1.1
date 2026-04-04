@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+@import "tailwindcss";
 
 @plugin "tailwindcss-animate";
 
@@ -84,14 +84,24 @@
     outline-color: color-mix(in srgb, var(--ring) 50%, transparent);
   }
   body {
-    background-color: var(--background);
+    background-color: #f4fcfa;
     color: var(--foreground);
     min-height: 100vh;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-image: url("data:image/svg+xml,%3Csvg width='800' height='800' viewBox='0 0 800 800' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23000' stroke-opacity='0.03' stroke-width='1'%3E%3Cpath d='M800 600c-100 0-200-50-300-50s-200 50-300 50-200-50-300-50'/%3E%3Cpath d='M800 500c-100 0-200-50-300-50s-200 50-300 50-200-50-300-50'/%3E%3Cpath d='M800 400c-100 0-200-50-300-50s-200 50-300 50-200-50-300-50'/%3E%3Cpath d='M800 300c-100 0-200-50-300-50s-200 50-300 50-200-50-300-50'/%3E%3Cpath d='M800 200c-100 0-200-50-300-50s-200 50-300 50-200-50-300-50'/%3E%3Cpath d='M800 100c-100 0-200-50-300-50s-200 50-300 50-200-50-300-50'/%3E%3Cpath d='M800 700c-100 0-200-50-300-50s-200 50-300 50-200-50-300-50'/%3E%3Cpath d='M800 800c-100 0-200-50-300-50s-200 50-300 50-200-50-300-50'/%3E%3Cpath d='M800 0c-100 0-200-50-300-50s-200 50-300 50-200-50-300-50'/%3E%3C/g%3E%3C/svg%3E");
+    
+    /* Background composition: Educational SVG pattern + Blurred Geometric Gradients */
+    background-image: 
+      url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg' stroke='%230f766e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none' opacity='0.04'%3E%3Cg transform='translate(30, 30) scale(1.5)'%3E%3Cpath d='M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20'/%3E%3C/g%3E%3Cg transform='translate(130, 40) scale(1.5)'%3E%3Cpath d='M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5'/%3E%3Cpath d='M9 18h6'/%3E%3Cpath d='M10 22h4'/%3E%3C/g%3E%3Cg transform='translate(40, 130) scale(1.5)'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Cpath d='M16.1 16.1A8.5 8.5 0 1 0 7.9 7.9'/%3E%3Cpath d='M7.9 16.1A8.5 8.5 0 1 0 16.1 7.9'/%3E%3Cpath d='M12 4v16'/%3E%3Cpath d='M4 12h16'/%3E%3C/g%3E%3Cg transform='translate(140, 130) scale(1.5)'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z'/%3E%3C/g%3E%3C/svg%3E"),
+      radial-gradient(circle at 15% 20%, rgba(167, 243, 208, 0.4) 0%, transparent 45%),
+      radial-gradient(circle at 85% 25%, rgba(186, 230, 253, 0.4) 0%, transparent 45%),
+      radial-gradient(circle at 50% 85%, rgba(134, 239, 172, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 10% 80%, rgba(125, 211, 252, 0.25) 0%, transparent 45%);
     background-attachment: fixed;
+    background-size: 200px 200px, 100vw 100vh, 100vw 100vh, 100vw 100vh, 100vw 100vh;
+    background-position: center;
+    background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat;
   }
 }
 

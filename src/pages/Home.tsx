@@ -29,59 +29,7 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     trackEvent('page_view', { page: 'home' });
-    
-    const seedDefaultPages = async () => {
-      const pagesRef = collection(db, 'pages');
-      try {
-        const snapshot = await getDocs(pagesRef);
-        
-        // Only seed if the collection is empty
-        if (snapshot.empty) {
-          for (const hub of DEFAULT_HUBS) {
-            const docRef = doc(db, 'pages', hub.slug);
-            await setDoc(docRef, {
-              ...hub,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
-            });
-          }
-        }
-
-        // Seed default site settings
-        const settingsRef = doc(db, 'site_settings', 'home_page');
-        const settingsSnap = await getDoc(settingsRef);
-        if (!settingsSnap.exists()) {
-          await setDoc(settingsRef, {
-            announcements: {
-              items: ['مرحباً بكم في منصة رفيقك في طريق الوعي', 'اكتشف برامجنا التدريبية الجديدة لعام 2024'],
-              speed: 20,
-              active: true
-            },
-            hero_slides: [
-              {
-                id: '1',
-                image: 'https://picsum.photos/seed/awareness1/1920/1080',
-                title: { ar: 'الوعي هو مفتاح التغيير', en: 'Awareness is the Key' },
-                description: { ar: 'رحلة تبدأ من الداخل لتغيير واقعك الخارجي', en: 'A journey that starts from within' },
-                interval: 5
-              },
-              {
-                id: '2',
-                image: 'https://picsum.photos/seed/awareness2/1920/1080',
-                title: { ar: 'تمكين القادة بالذكاء العاطفي', en: 'Empowering Leaders' },
-                description: { ar: 'بناء مؤسسات قائمة على القيم والوعي الإنساني', en: 'Building value-based organizations' },
-                interval: 5
-              }
-            ],
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
-        }
-      } catch (error) {
-        handleFirestoreError(error, OperationType.GET, 'pages');
-      }
-    };
-    seedDefaultPages();
+    // removed auto-seed logic to prevent overwriting user-modified data on reload
 
     const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -388,8 +336,21 @@ const Home: React.FC = () => {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin transition-all duration-300"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="pb-20 pt-0">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+      className="pb-20 pt-0"
+    >
       {siteSettings?.announcements?.active && (
         <AnnouncementTicker 
           items={siteSettings.announcements.items} 
@@ -622,15 +583,18 @@ const Home: React.FC = () => {
               variant="ghost" 
               size="sm"
               onClick={() => setSelectedHubId(hub.id)}
-              className={`rounded-2xl h-auto py-4 flex flex-col gap-2 border transition-all ${colorClass} whitespace-normal break-words`}
+              className={`rounded-2xl h-auto min-h-max p-3 sm:p-4 flex flex-col gap-2 border transition-all ${colorClass} whitespace-normal text-wrap break-words`}
+              style={{ wordWrap: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' }}
             >
-              {renderIcon(hub.icon, "h-6 w-6")}
-              <span className="text-xs font-bold w-full text-center break-words">{hub.title?.[lang] || hub.title?.ar}</span>
+              <div className="shrink-0">{renderIcon(hub.icon, "h-6 w-6")}</div>
+              <span className="text-[11px] sm:text-xs font-bold w-full text-center leading-snug shrink whitespace-pre-wrap max-w-full break-words break-all sm:break-normal line-clamp-3">
+                {hub.title?.[lang] || hub.title?.ar}
+              </span>
             </Button>
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
