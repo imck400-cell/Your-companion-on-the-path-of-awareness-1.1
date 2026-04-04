@@ -108,33 +108,36 @@ const Home: React.FC = () => {
     };
   }, []);
 
+  const lang = i18n.language.startsWith('ar') ? 'ar' : 'en';
+
   const handleSyncWithDefaults = async () => {
     if (!isSuperAdmin) return;
     
-    const confirmSync = window.confirm(lang === 'ar' ? 'هل أنت متأكد من رغبتك في إعادة ضبط جميع الصفحات إلى الإعدادات الافتراضية؟ سيؤدي هذا إلى مسح جميع التعديلات الحالية.' : 'Are you sure you want to reset all pages to defaults? This will erase all current modifications.');
-    
-    if (!confirmSync) return;
-
-    setLoading(true);
-    try {
-      for (const hub of DEFAULT_HUBS) {
-        const docRef = doc(db, 'pages', hub.slug);
-        await setDoc(docRef, {
-          ...hub,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
+    toast.warning(lang === 'ar' ? 'هل أنت متأكد من رغبتك في إعادة ضبط جميع الصفحات إلى الإعدادات الافتراضية؟ سيؤدي هذا إلى مسح جميع التعديلات الحالية.' : 'Are you sure you want to reset all pages to defaults? This will erase all current modifications.', {
+      action: {
+        label: lang === 'ar' ? 'نعم، مزامنة' : 'Yes, sync',
+        onClick: async () => {
+          setLoading(true);
+          try {
+            for (const hub of DEFAULT_HUBS) {
+              const docRef = doc(db, 'pages', hub.slug);
+              await setDoc(docRef, {
+                ...hub,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              });
+            }
+            toast.success(lang === 'ar' ? 'تمت المزامنة مع الإعدادات الافتراضية بنجاح' : 'Synced with defaults successfully');
+          } catch (error) {
+            handleFirestoreError(error, OperationType.WRITE, 'pages');
+            toast.error(lang === 'ar' ? 'فشل المزامنة' : 'Sync failed');
+          } finally {
+            setLoading(false);
+          }
+        }
       }
-      toast.success(lang === 'ar' ? 'تمت المزامنة مع الإعدادات الافتراضية بنجاح' : 'Synced with defaults successfully');
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, 'pages');
-      toast.error(lang === 'ar' ? 'فشلت المزامنة' : 'Sync failed');
-    } finally {
-      setLoading(false);
-    }
+    });
   };
-
-  const lang = i18n.language.startsWith('ar') ? 'ar' : 'en';
   const hasFullPermissions = isSuperAdmin || profile?.permissions?.includes('all');
 
   const handleImageUpload = async (hubId: string, itemId?: string) => {

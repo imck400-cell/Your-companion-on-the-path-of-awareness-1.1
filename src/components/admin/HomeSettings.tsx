@@ -163,6 +163,54 @@ export const HomeSettings: React.FC = () => {
     });
   };
 
+  const handleSyncWithDefaults = async () => {
+    toast.warning('هل أنت متأكد من رغبتك في إعادة ضبط إعدادات الصفحة الرئيسية إلى الافتراضية؟ سيؤدي هذا إلى مسح جميع التعديلات الحالية.', {
+      action: {
+        label: 'نعم، مزامنة',
+        onClick: async () => {
+          setSaving(true);
+          try {
+            const defaultSettings = {
+              announcements: {
+                items: ['مرحباً بكم في منصة رفيقك في طريق الوعي', 'اكتشف برامجنا التدريبية الجديدة لعام 2024'],
+                speed: 20,
+                active: true
+              },
+              hero_slides: [
+                {
+                  id: '1',
+                  image: 'https://picsum.photos/seed/awareness1/1920/1080',
+                  title: { ar: 'الوعي هو مفتاح التغيير', en: 'Awareness is the Key' },
+                  description: { ar: 'رحلة تبدأ من الداخل لتغيير واقعك الخارجي', en: 'A journey that starts from within' },
+                  interval: 5
+                },
+                {
+                  id: '2',
+                  image: 'https://picsum.photos/seed/awareness2/1920/1080',
+                  title: { ar: 'تمكين القادة بالذكاء العاطفي', en: 'Empowering Leaders' },
+                  description: { ar: 'بناء مؤسسات قائمة على القيم والوعي الإنساني', en: 'Building value-based organizations' },
+                  interval: 5
+                }
+              ]
+            };
+            const docRef = doc(db, 'site_settings', 'home_page');
+            await setDoc(docRef, {
+              ...defaultSettings,
+              updatedAt: serverTimestamp()
+            });
+            setSettings(defaultSettings);
+            toast.success('تمت المزامنة مع الإعدادات الافتراضية بنجاح');
+          } catch (error) {
+            console.error('Error syncing settings:', error);
+            toast.error('فشلت المزامنة');
+          } finally {
+            setSaving(false);
+          }
+        }
+      }
+    });
+  };
+
   const IconWrapper = ({ children, colorClass }: { children: React.ReactNode, colorClass: string }) => (
     <div className={`relative flex items-center justify-center w-10 h-10 rounded-xl overflow-hidden group/icon ${colorClass} shadow-sm border border-white/20 shrink-0`}>
       <div className="absolute top-0 right-0 w-6 h-6 bg-white/30 rotate-45 translate-x-3 -translate-y-3 group-hover/icon:scale-150 transition-transform duration-300" />
@@ -181,10 +229,22 @@ export const HomeSettings: React.FC = () => {
           </IconWrapper>
           <h2 className="text-2xl font-bold">إعدادات الصفحة الرئيسية</h2>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="rounded-full px-8 shadow-lg hover:scale-105 transition-all">
-          {saving ? <RefreshCw className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
-          حفظ التغييرات
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleSyncWithDefaults} 
+            disabled={saving}
+            className="rounded-full border-primary/30 hover:bg-primary/10 transition-all"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${saving ? 'animate-spin' : ''}`} />
+            مزامنة مع الافتراضي
+          </Button>
+          <Button onClick={handleSave} disabled={saving} className="rounded-full px-8 shadow-lg hover:scale-105 transition-all">
+            {saving ? <RefreshCw className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
+            حفظ التغييرات
+          </Button>
+        </div>
       </div>
 
       {/* Announcements Section */}
@@ -211,8 +271,13 @@ export const HomeSettings: React.FC = () => {
         <CardContent className="space-y-6 pt-6">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <Label>سرعة الشريط (مستوى السرعة)</Label>
-              <span className="text-xs font-medium text-muted-foreground">كلما زاد الرقم كان الشريط أسرع</span>
+              <Label className="text-blue-700 font-bold">سرعة الشريط (مستوى السرعة)</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+                  {settings.announcements.speed > 80 ? 'سرعة فائقة' : settings.announcements.speed > 50 ? 'سريع جداً' : settings.announcements.speed > 30 ? 'سريع' : 'متوسط'}
+                </span>
+                <span className="text-xs font-medium text-muted-foreground">كلما زاد الرقم كان الشريط أسرع</span>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <Slider 
@@ -243,14 +308,17 @@ export const HomeSettings: React.FC = () => {
               </Button>
             </div>
             {settings.announcements.items.map((item: string, index: number) => (
-              <div key={index} className="flex gap-2">
-                <Input 
-                  value={item} 
-                  onChange={(e) => updateAnnouncement(index, e.target.value)}
-                  placeholder="نص الإعلان..."
-                  className="rounded-xl"
-                />
-                <Button size="icon" variant="ghost" onClick={() => removeAnnouncement(index)} className="text-destructive">
+              <div key={index} className="flex gap-2 group/item">
+                <div className="relative flex-1">
+                  <Input 
+                    value={item} 
+                    onChange={(e) => updateAnnouncement(index, e.target.value)}
+                    placeholder="نص الإعلان..."
+                    className="rounded-xl border-blue-100 bg-blue-50/30 focus:bg-white transition-all pr-10"
+                  />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 bg-white/40 rotate-45 pointer-events-none" />
+                </div>
+                <Button size="icon" variant="ghost" onClick={() => removeAnnouncement(index)} className="text-destructive hover:bg-destructive/10 rounded-xl">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -330,7 +398,7 @@ export const HomeSettings: React.FC = () => {
                       <Input 
                         value={slide.title.ar} 
                         onChange={(e) => updateSlide(slide.id, 'title', { ...slide.title, ar: e.target.value })}
-                        className="rounded-xl border-white/40 bg-white/50"
+                        className="rounded-xl border-primary/20 bg-primary/5 focus:bg-white transition-all"
                       />
                     </div>
                     <div className="space-y-3">
@@ -343,7 +411,7 @@ export const HomeSettings: React.FC = () => {
                       <Input 
                         value={slide.title.en} 
                         onChange={(e) => updateSlide(slide.id, 'title', { ...slide.title, en: e.target.value })}
-                        className="rounded-xl border-white/40 bg-white/50"
+                        className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -370,7 +438,7 @@ export const HomeSettings: React.FC = () => {
                       <Input 
                         value={slide.description.ar} 
                         onChange={(e) => updateSlide(slide.id, 'description', { ...slide.description, ar: e.target.value })}
-                        className="rounded-xl border-white/40 bg-white/50"
+                        className="rounded-xl border-primary/20 bg-primary/5 focus:bg-white transition-all"
                       />
                     </div>
                     <div className="space-y-3">
@@ -383,7 +451,7 @@ export const HomeSettings: React.FC = () => {
                       <Input 
                         value={slide.description.en} 
                         onChange={(e) => updateSlide(slide.id, 'description', { ...slide.description, en: e.target.value })}
-                        className="rounded-xl border-white/40 bg-white/50"
+                        className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white transition-all"
                       />
                     </div>
                   </div>

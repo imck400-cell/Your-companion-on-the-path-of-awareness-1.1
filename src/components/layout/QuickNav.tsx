@@ -67,14 +67,24 @@ export const QuickNav: React.FC = () => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Training Courses (Unlinked for now) */}
-        <Button variant="ghost" size="sm" className="flex items-center gap-2 whitespace-nowrap opacity-70 cursor-not-allowed">
+        {/* Training Courses */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigate('/p/training-courses')}
+          className="flex items-center gap-2 whitespace-nowrap hover:bg-primary/10"
+        >
           <GraduationCap className="h-4 w-4" />
           <span>{language === 'ar' ? 'الدورات التدريبية الحالية' : 'Current Training Courses'}</span>
         </Button>
 
-        {/* About Us (Unlinked for now) */}
-        <Button variant="ghost" size="sm" className="flex items-center gap-2 whitespace-nowrap opacity-70 cursor-not-allowed">
+        {/* About Us */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigate('/p/about')}
+          className="flex items-center gap-2 whitespace-nowrap hover:bg-primary/10"
+        >
           <Info className="h-4 w-4" />
           <span>{language === 'ar' ? 'من نحن' : 'About Us'}</span>
         </Button>

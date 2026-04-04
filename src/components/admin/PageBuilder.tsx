@@ -169,9 +169,15 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel
                   <Label>الرابط (Slug)</Label>
                   <Input 
                     value={formData.slug || ''} 
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    onChange={(e) => {
+                      // Allow Arabic characters, letters, numbers, and hyphens
+                      // We replace spaces with hyphens and remove most special characters but keep letters
+                      const val = e.target.value.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\p{L}\p{N}-]/gu, '');
+                      setFormData({ ...formData, slug: val });
+                    }}
                     placeholder="example-section"
                   />
+                  <p className="text-[10px] text-muted-foreground">سيتم تحويل المسافات إلى شرطات تلقائياً</p>
                 </div>
                 <div className="space-y-2">
                   <Label>الأيقونة (Lucide Icon Name)</Label>

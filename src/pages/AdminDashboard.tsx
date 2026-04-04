@@ -28,7 +28,7 @@ const AdminDashboard: React.FC = () => {
     </div>
   );
 
-  const tabTriggerClass = "h-auto flex-none snap-start shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl p-3 shadow-sm border bg-white/50 backdrop-blur-sm transition-all hover:bg-white flex flex-col items-center justify-center gap-2 w-24 aspect-square";
+  const tabTriggerClass = "h-auto flex-none snap-start shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl p-2 shadow-sm border bg-white/50 backdrop-blur-sm transition-all hover:bg-white flex flex-col items-center justify-center gap-1.5 w-20 aspect-square";
 
   const TabContentWrapper = ({ children }: { children: React.ReactNode }) => (
     <div className="relative mt-4 rounded-3xl bg-gradient-to-br from-slate-50/95 to-slate-100/80 dark:from-slate-900/95 dark:to-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/50 shadow-xl p-6 md:p-8 overflow-hidden">
@@ -52,8 +52,9 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 flex flex-col">
-        <TabsList className="flex overflow-x-auto no-scrollbar gap-3 bg-transparent h-auto p-2 justify-start w-full snap-x">
-          {hasPermission('overview') && (
+        <div className="flex justify-center w-full">
+          <TabsList className="flex overflow-x-auto no-scrollbar gap-3 bg-white/30 backdrop-blur-md p-2 rounded-[2rem] border border-white/20 h-auto justify-start md:justify-center w-full md:w-fit snap-x">
+            {hasPermission('overview') && (
             <TabsTrigger value="overview" className={tabTriggerClass}>
               <IconWrapper colorClass="bg-blue-500/10 text-blue-600 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
                 <LayoutDashboard className="h-5 w-5" />
@@ -110,6 +111,7 @@ const AdminDashboard: React.FC = () => {
             </TabsTrigger>
           )}
         </TabsList>
+      </div>
 
         <TabsContent value="overview" className="w-full">
           {hasPermission('overview') ? (

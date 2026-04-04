@@ -27,11 +27,26 @@ const DynamicPage: React.FC = () => {
 
   useEffect(() => {
     const fetchPage = async () => {
+      if (!slug) return;
       setLoading(true);
       try {
-        const q = query(collection(db, 'pages'), where('slug', '==', slug));
-        const querySnapshot = await getDocs(q);
+        // Try matching by slug first
+        let q = query(collection(db, 'pages'), where('slug', '==', slug));
+        let querySnapshot = await getDocs(q);
         
+        // If not found by slug, try matching by common titles for special pages
+        if (querySnapshot.empty) {
+          const specialTitles: Record<string, string> = {
+            'training-courses': 'الدورات التدريبية الحالية',
+            'about': 'من نحن'
+          };
+          
+          if (specialTitles[slug]) {
+            q = query(collection(db, 'pages'), where('title.ar', '==', specialTitles[slug]));
+            querySnapshot = await getDocs(q);
+          }
+        }
+
         if (!querySnapshot.empty) {
           const pageData = querySnapshot.docs[0].data();
           setPage({ id: querySnapshot.docs[0].id, ...pageData });
@@ -50,6 +65,8 @@ const DynamicPage: React.FC = () => {
           
           trackEvent('page_view', { page: slug, pageId: querySnapshot.docs[0].id });
         } else {
+          // If still not found, wait a bit or redirect
+          console.warn(`Page not found for slug: ${slug}`);
           navigate('/');
         }
       } catch (error) {
@@ -60,9 +77,7 @@ const DynamicPage: React.FC = () => {
       }
     };
 
-    if (slug) {
-      fetchPage();
-    }
+    fetchPage();
   }, [slug, itemId, navigate]);
 
   if (loading) {
