@@ -128,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
       
       <Dialog open={showLoginModal} onOpenChange={(open) => !isAuthenticating && setShowLoginModal(open)}>
-        <DialogContent className="sm:max-w-md glass-card border-primary/20 p-8 rounded-3xl" dir="rtl">
+        <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-2xl p-8 rounded-3xl" dir="rtl">
           <DialogHeader className="space-y-4">
             <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2">
               <LogIn className="w-8 h-8 text-primary" />

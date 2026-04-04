@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { trackEvent } from '@/lib/analytics';
 import { collection, onSnapshot, query, orderBy, getDocs, serverTimestamp, doc, updateDoc, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -13,7 +13,7 @@ import { DEFAULT_HUBS } from '@/data/defaultPages';
 import { useAuth } from '@/context/AuthContext';
 import { compressImage, getBase64Size } from '@/lib/imageUtils';
 import * as Icons from 'lucide-react';
-import { AnnouncementTicker } from '@/components/AnnouncementTicker';
+
 import { HeroCarousel } from '@/components/HeroCarousel';
 
 import { handleFirestoreError, OperationType } from '@/lib/firestoreErrorHandler';
@@ -351,12 +351,6 @@ const Home: React.FC = () => {
       transition={{ duration: 0.8, ease: "easeOut" }}
       className="pb-20 pt-0"
     >
-      {siteSettings?.announcements?.active && (
-        <AnnouncementTicker 
-          items={siteSettings.announcements.items} 
-          speed={siteSettings.announcements.speed} 
-        />
-      )}
 
       {/* Header */}
       <header className="text-center w-full mx-auto space-y-0">

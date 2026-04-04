@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+
 import { useNavigate } from 'react-router-dom';
 
 interface AnnouncementTickerProps {
@@ -8,10 +8,10 @@ interface AnnouncementTickerProps {
   active?: boolean;
 }
 
-export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({ 
-  items = [], 
-  speed = 20, 
-  active = true 
+export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
+  items = [],
+  speed = 20,
+  active = true
 }) => {
   const navigate = useNavigate();
   if (!active || items.length === 0) return null;
@@ -20,7 +20,7 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
   // Translating -100% will smoothly slide them from right to left.
   const baseDuration = 30;
   const duration = Math.max(1, (baseDuration * items.length) / (speed / 10));
-  
+
   const colors = [
     'bg-blue-500/10 text-blue-700 border-blue-500/20',
     'bg-emerald-500/10 text-emerald-700 border-emerald-500/20',
@@ -43,8 +43,8 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
     const text = typeof item === 'string' ? item : item.text;
     const isClickable = typeof item !== 'string' && item.link;
     return (
-      <div 
-        key={i} 
+      <div
+        key={i}
         dir="rtl"
         onClick={() => handleClick(item)}
         className={`inline-flex items-center px-4 py-1 rounded-full border font-bold text-xs md:text-sm shadow-xs transition-all hover:scale-105 ${colors[i % colors.length]} ${isClickable ? 'cursor-pointer hover:bg-white/50' : ''}`}
@@ -56,7 +56,7 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
   };
 
   return (
-    <div 
+    <div
       className="w-full bg-orange-500/5 backdrop-blur-md border-y border-orange-500/10 overflow-hidden py-2 relative z-40 h-10 md:h-12 flex items-center group"
       dir="ltr"
     >
@@ -79,7 +79,7 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
           }
         `}
       </style>
-      
+
       <div className="animate-marquee gap-8 px-4">
         {items.map((item, i) => renderItem(item, i))}
       </div>
