@@ -78,7 +78,10 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel
       id: Math.random().toString(36).substr(2, 9),
       title: { ar: '', en: '' },
       content: { ar: '', en: '' },
-      image: ''
+      image: '',
+      pdfUrl: '',
+      videoUrl: '',
+      externalLinks: ''
     };
     setFormData(prev => ({ ...prev, items: [...(prev.items || []), newItem] }));
   };
@@ -337,6 +340,37 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel
                       value={item.content?.ar || ''} 
                       onChange={(e) => updateItem(item.id, 'content.ar', e.target.value)}
                     />
+                  </div>
+                  
+                  {/* Additional Attachments */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-dashed">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1 text-xs"><FileText className="w-3 h-3 text-destructive" /> رابط ملف PDF</Label>
+                      <Input 
+                        placeholder="https://.../file.pdf" 
+                        value={item.pdfUrl || ''} 
+                        onChange={(e) => updateItem(item.id, 'pdfUrl', e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1 text-xs"><Video className="w-3 h-3 text-blue-500" /> رابط فيديو</Label>
+                      <Input 
+                        placeholder="Youtube or mp4 link..." 
+                        value={item.videoUrl || ''} 
+                        onChange={(e) => updateItem(item.id, 'videoUrl', e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1 text-xs"><LinkIcon className="w-3 h-3 text-emerald-500" /> روابط خارجية</Label>
+                      <Input 
+                        placeholder="افصل بين الروابط بفاصلة (,)" 
+                        value={item.externalLinks || ''} 
+                        onChange={(e) => updateItem(item.id, 'externalLinks', e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}

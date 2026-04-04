@@ -90,14 +90,19 @@ export const HomeSettings: React.FC = () => {
       ...settings,
       announcements: {
         ...settings.announcements,
-        items: [...settings.announcements.items, 'إعلان جديد']
+        items: [...settings.announcements.items, { text: 'إعلان جديد', link: '' }]
       }
     });
   };
 
-  const updateAnnouncement = (index: number, value: string) => {
+  const updateAnnouncement = (index: number, field: 'text' | 'link', value: string) => {
     const newItems = [...settings.announcements.items];
-    newItems[index] = value;
+    const prevItem = newItems[index];
+    if (typeof prevItem === 'string') {
+      newItems[index] = { text: field === 'text' ? value : prevItem, link: field === 'link' ? value : '' };
+    } else {
+      newItems[index] = { ...prevItem, [field]: value };
+    }
     setSettings({
       ...settings,
       announcements: { ...settings.announcements, items: newItems }
@@ -307,22 +312,32 @@ export const HomeSettings: React.FC = () => {
                 <Plus className="h-4 w-4 mr-1" /> إضافة إعلان
               </Button>
             </div>
-            {settings.announcements.items.map((item: string, index: number) => (
-              <div key={index} className="flex gap-2 group/item">
-                <div className="relative flex-1">
+            {settings.announcements.items.map((item: any, index: number) => {
+              const textStr = typeof item === 'string' ? item : item.text || '';
+              const linkStr = typeof item === 'string' ? '' : item.link || '';
+              return (
+              <div key={index} className="flex gap-2 group/item items-start">
+                <div className="relative flex-1 space-y-2">
                   <Input 
-                    value={item} 
-                    onChange={(e) => updateAnnouncement(index, e.target.value)}
+                    value={textStr} 
+                    onChange={(e) => updateAnnouncement(index, 'text', e.target.value)}
                     placeholder="نص الإعلان..."
                     className="rounded-xl border-blue-100 bg-blue-50/30 focus:bg-white transition-all pr-10"
                   />
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 bg-white/40 rotate-45 pointer-events-none" />
+                  <div className="absolute left-3 top-3 w-4 h-4 bg-white/40 rotate-45 pointer-events-none" />
+                  <Input 
+                    value={linkStr} 
+                    onChange={(e) => updateAnnouncement(index, 'link', e.target.value)}
+                    placeholder="رابط التوجيه (مثال: /p/managers-leaders/item-id) أو رابط خارجي"
+                    className="rounded-xl border-blue-100 bg-blue-50/30 focus:bg-white transition-all text-left font-mono text-xs"
+                    dir="ltr"
+                  />
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => removeAnnouncement(index)} className="text-destructive hover:bg-destructive/10 rounded-xl">
+                <Button size="icon" variant="ghost" onClick={() => removeAnnouncement(index)} className="text-destructive hover:bg-destructive/10 rounded-xl mt-1">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-            ))}
+            )})}
           </div>
         </CardContent>
       </Card>

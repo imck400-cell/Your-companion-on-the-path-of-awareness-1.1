@@ -39,7 +39,7 @@ export const QuickNav: React.FC = () => {
   };
 
   return (
-    <div className="sticky top-16 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="sticky top-16 z-40 w-full border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 shadow-sm">
       <div className="container flex h-12 items-center gap-4 px-4 overflow-x-auto no-scrollbar">
         {/* Home Button */}
         <Button variant="ghost" size="sm" render={<Link to="/" />} className="flex items-center gap-2 whitespace-nowrap">

@@ -176,11 +176,72 @@ const DynamicPage: React.FC = () => {
             <div className="h-1.5 w-24 bg-primary rounded-full" />
           </div>
 
-          <Card className="border-none shadow-sm glass-card p-6 md:p-10 rounded-3xl">
+          <Card className="border-none shadow-sm glass-card p-6 md:p-10 rounded-3xl mt-8">
             <CardContent className="p-0 prose prose-lg dark:prose-invert max-w-none">
-              <div className="text-xl md:text-2xl leading-relaxed whitespace-pre-wrap text-foreground/90 font-light">
+              <div 
+                className="text-lg md:text-2xl leading-loose whitespace-pre-wrap text-foreground/95 font-medium font-sans text-justify"
+                style={{ lineHeight: '2.2' }}
+              >
                 {item.content?.[lang] || item.content?.ar}
               </div>
+              
+              {/* Media Enclosures */}
+              {item.pdfUrl && (
+                <div className="mt-12 space-y-6">
+                  <h3 className="font-heading text-2xl font-bold text-primary border-b pb-4">ملف المرفق (PDF)</h3>
+                  <div className="w-full bg-muted/20 p-2 rounded-3xl border-2 border-primary/10 shadow-inner">
+                    <iframe 
+                      src={item.pdfUrl.includes('drive.google.com') ? item.pdfUrl.replace('/view', '/preview') : item.pdfUrl} 
+                      className="w-full h-[70vh] md:h-[800px] rounded-2xl" 
+                      title="PDF Viewer" 
+                    />
+                  </div>
+                  <Button 
+                    onClick={() => window.open(item.pdfUrl, '_blank')} 
+                    variant="default" 
+                    className="rounded-full shadow-lg hover:shadow-xl transition-all"
+                  >
+                    فتح / تحميل ملف PDF في نافذة جديدة
+                  </Button>
+                </div>
+              )}
+
+              {item.videoUrl && (
+                <div className="mt-12 space-y-6">
+                  <h3 className="font-heading text-2xl font-bold text-primary border-b pb-4">مقطع الفيديو</h3>
+                  <div className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 bg-black">
+                    <iframe 
+                      src={item.videoUrl.includes('youtu') ? item.videoUrl.replace('watch?v=', 'embed/').split('&')[0].replace('youtu.be/', 'youtube.com/embed/') : item.videoUrl} 
+                      className="absolute top-0 left-0 w-full h-full" 
+                      allowFullScreen 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      title="Video Player"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {item.externalLinks && (
+                <div className="mt-12 space-y-6 bg-primary/5 p-8 rounded-3xl border border-primary/10">
+                  <h3 className="font-heading text-2xl font-bold text-primary mb-4">روابط ومراجع إضافية</h3>
+                  <div className="flex flex-wrap gap-4">
+                    {item.externalLinks.split(',').filter((l: string) => l.trim() !== '').map((link: string, i: number) => {
+                      const trimmedLink = link.trim();
+                      const isYoutube = trimmedLink.includes('youtu');
+                      return (
+                        <Button 
+                          key={i} 
+                          onClick={() => window.open(trimmedLink, '_blank')} 
+                          variant={isYoutube ? "destructive" : "secondary"} 
+                          className="rounded-full text-sm md:text-base font-bold shadow-md hover:scale-105 transition-transform"
+                        >
+                          {isYoutube ? 'مشاهدة على يوتيوب' : 'زيارة الرابط الخارجي'}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>

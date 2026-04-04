@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 
 interface AnnouncementTickerProps {
-  items: string[];
+  items: any[];
   speed?: number;
   active?: boolean;
 }
@@ -12,6 +13,7 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
   speed = 20, 
   active = true 
 }) => {
+  const navigate = useNavigate();
   if (!active || items.length === 0) return null;
 
   // By defining dir=ltr on the wrapper, elements flow left-to-right.
@@ -26,6 +28,32 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
     'bg-orange-500/10 text-orange-700 border-orange-500/20',
     'bg-pink-500/10 text-pink-700 border-pink-500/20',
   ];
+
+  const handleClick = (item: any) => {
+    if (typeof item !== 'string' && item.link) {
+      if (item.link.startsWith('http')) {
+        window.open(item.link, '_blank');
+      } else {
+        navigate(item.link);
+      }
+    }
+  };
+
+  const renderItem = (item: any, i: number) => {
+    const text = typeof item === 'string' ? item : item.text;
+    const isClickable = typeof item !== 'string' && item.link;
+    return (
+      <div 
+        key={i} 
+        dir="rtl"
+        onClick={() => handleClick(item)}
+        className={`inline-flex items-center px-4 py-1 rounded-full border font-bold text-xs md:text-sm shadow-xs transition-all hover:scale-105 ${colors[i % colors.length]} ${isClickable ? 'cursor-pointer hover:bg-white/50' : ''}`}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-current ml-2 opacity-50" />
+        {text}
+      </div>
+    );
+  };
 
   return (
     <div 
@@ -53,28 +81,10 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
       </style>
       
       <div className="animate-marquee gap-8 px-4">
-        {items.map((text, i) => (
-          <div 
-            key={i} 
-            dir="rtl"
-            className={`inline-flex items-center px-4 py-1 rounded-full border font-bold text-xs md:text-sm shadow-xs transition-all hover:scale-105 ${colors[i % colors.length]}`}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-current ml-2 opacity-50" />
-            {text}
-          </div>
-        ))}
+        {items.map((item, i) => renderItem(item, i))}
       </div>
       <div className="animate-marquee gap-8 px-4" aria-hidden="true">
-        {items.map((text, i) => (
-          <div 
-            key={`dup-${i}`} 
-            dir="rtl"
-            className={`inline-flex items-center px-4 py-1 rounded-full border font-bold text-xs md:text-sm shadow-xs transition-all hover:scale-105 ${colors[i % colors.length]}`}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-current ml-2 opacity-50" />
-            {text}
-          </div>
-        ))}
+        {items.map((item, i) => renderItem(item, `dup-${i}` as any))}
       </div>
     </div>
   );
