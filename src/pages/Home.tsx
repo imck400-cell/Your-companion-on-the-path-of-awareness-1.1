@@ -375,19 +375,19 @@ const Home: React.FC = () => {
       )}
 
       {/* Header */}
-      <header className="text-center max-w-7xl mx-auto px-4 space-y-0">
+      <header className="text-center w-full mx-auto space-y-0">
         {siteSettings?.hero_slides?.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-0 w-full">
             <HeroCarousel slides={siteSettings.hero_slides} lang={lang} />
           </div>
         )}
         
-        <div className="glass-card p-6 md:p-12 rounded-2xl md:rounded-[3rem] relative max-w-5xl mx-auto mt-0">
+        <div className="glass-card p-6 md:p-12 rounded-2xl md:rounded-[3rem] relative max-w-5xl mx-auto mt-8 px-4">
           {isSuperAdmin && (
           <Button
             variant="outline"
             size="sm"
-            className="absolute top-4 right-4 rounded-full opacity-50 hover:opacity-100"
+            className="absolute top-4 right-4 rounded-full bg-white/80 backdrop-blur-sm border-primary/30 hover:bg-primary hover:text-white transition-all shadow-sm z-50"
             onClick={handleSyncWithDefaults}
           >
             <Icons.RefreshCw className="h-4 w-4 mr-2" />

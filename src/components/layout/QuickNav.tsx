@@ -42,7 +42,7 @@ export const QuickNav: React.FC = () => {
     <div className="sticky top-16 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-12 items-center gap-4 px-4 overflow-x-auto no-scrollbar">
         {/* Home Button */}
-        <Button variant="ghost" size="sm" render={<Link to="/" />} nativeButton={false} className="flex items-center gap-2 whitespace-nowrap">
+        <Button variant="ghost" size="sm" render={<Link to="/" />} className="flex items-center gap-2 whitespace-nowrap">
           <Home className="h-4 w-4" />
           <span>{language === 'ar' ? 'الرئيسية' : 'Home'}</span>
         </Button>

@@ -65,7 +65,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides = [], lang = 
   const currentSlide = slides[currentIndex];
 
   return (
-    <div className="relative w-full aspect-video md:aspect-[21/9] rounded-[2rem] md:rounded-[3.5rem] overflow-hidden shadow-2xl border-4 md:border-8 border-white group">
+    <div className="relative w-full overflow-hidden shadow-2xl group bg-black/5 grid">
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={currentIndex}
@@ -78,25 +78,31 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides = [], lang = 
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.5 }
           }}
-          className="absolute inset-0"
+          className="col-start-1 row-start-1 w-full relative"
         >
-          <img 
-            src={currentSlide.image} 
-            alt="" 
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4 md:p-12 text-white text-right">
+          <div className="relative w-full flex items-center justify-center overflow-hidden bg-black">
+            {/* Main image - fully visible, dictates height up to 80vh */}
+            <img 
+              src={currentSlide.image} 
+              alt={currentSlide.title?.[lang] || ""} 
+              className="w-full h-auto max-h-[80vh] object-contain z-10"
+              referrerPolicy="no-referrer"
+            />
+            {/* Subtle overlay to unify the look and make text readable */}
+            <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent z-20" />
+          </div>
+          
+          <div className="absolute inset-0 z-30 flex flex-col justify-end p-6 md:p-12 text-white text-right pointer-events-none">
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="space-y-2 max-w-2xl ml-auto bg-black/20 backdrop-blur-xs p-4 rounded-2xl md:bg-transparent md:backdrop-blur-none md:p-0"
+              transition={{ delay: 0.3 }}
+              className="space-y-2 max-w-2xl ml-auto pointer-events-auto"
             >
-              <h2 className="text-xl md:text-5xl font-heading font-bold leading-tight">
+              <h2 className="text-xl md:text-4xl lg:text-5xl font-heading font-bold leading-tight drop-shadow-2xl">
                 {currentSlide.title?.[lang] || currentSlide.title?.ar}
               </h2>
-              <p className="text-sm md:text-xl text-white/90 font-light leading-relaxed line-clamp-2 md:line-clamp-none">
+              <p className="text-sm md:text-lg lg:text-xl text-white/95 font-medium leading-relaxed line-clamp-2 md:line-clamp-none drop-shadow-xl max-w-lg ml-auto">
                 {currentSlide.description?.[lang] || currentSlide.description?.ar}
               </p>
             </motion.div>

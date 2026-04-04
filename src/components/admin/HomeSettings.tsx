@@ -164,8 +164,8 @@ export const HomeSettings: React.FC = () => {
   };
 
   const IconWrapper = ({ children, colorClass }: { children: React.ReactNode, colorClass: string }) => (
-    <div className={`relative p-2 rounded-lg overflow-hidden group/icon ${colorClass}`}>
-      <div className="absolute top-0 right-0 w-4 h-4 bg-white/20 rotate-45 translate-x-2 -translate-y-2 group-hover/icon:scale-150 transition-transform" />
+    <div className={`relative flex items-center justify-center w-10 h-10 rounded-xl overflow-hidden group/icon ${colorClass} shadow-sm border border-white/20 shrink-0`}>
+      <div className="absolute top-0 right-0 w-6 h-6 bg-white/30 rotate-45 translate-x-3 -translate-y-3 group-hover/icon:scale-150 transition-transform duration-300" />
       <div className="relative z-10">{children}</div>
     </div>
   );
@@ -218,7 +218,7 @@ export const HomeSettings: React.FC = () => {
               <Slider 
                 value={[settings.announcements.speed || 20]} 
                 min={5} 
-                max={60} 
+                max={100} 
                 step={1}
                 onValueChange={(val: any) => setSettings({
                   ...settings,

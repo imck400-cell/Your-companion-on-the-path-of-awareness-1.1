@@ -9,7 +9,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     <div className="min-h-screen bg-background font-sans antialiased flex flex-col">
       <Navbar />
       <QuickNav />
-      <main className="flex-grow container mx-auto py-6 px-4">
+      <main className="flex-grow container mx-auto py-0 px-0 md:px-4">
         {children}
       </main>
       <Footer />

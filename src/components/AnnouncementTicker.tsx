@@ -18,8 +18,9 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
   const displayItems = [...items, ...items, ...items];
   
   // Invert speed logic: higher value = faster
-  // speed range 5-60. duration = (70 - speed)
-  const duration = Math.max(5, 70 - speed);
+  // speed range 5-100. 
+  // We use an exponential decay so it gets significantly faster at higher values
+  const duration = Math.max(0.5, 60 * Math.pow(0.95, speed));
   
   const colors = [
     'bg-blue-500/20 text-blue-700 border-blue-500/30',
