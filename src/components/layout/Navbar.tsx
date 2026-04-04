@@ -125,7 +125,7 @@ export const Navbar: React.FC = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button onClick={login} variant="default" size="sm">
+            <Button onClick={(e) => { e.preventDefault(); login(); }} variant="default" size="sm">
               {t('login')}
             </Button>
           )}

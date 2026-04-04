@@ -33,17 +33,23 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
 
   return (
     <div className="w-full bg-orange-500/5 backdrop-blur-md border-y border-orange-500/10 overflow-hidden py-2 relative z-40 h-10 md:h-12 flex items-center group">
-      <motion.div 
-        className="flex whitespace-nowrap gap-8 px-4"
-        animate={{ x: ["0%", "-25%"] }}
-        transition={{ 
-          duration: duration, 
-          repeat: Infinity, 
-          ease: "linear",
-          repeatType: "loop"
-        }}
-        whileHover={{ animationPlayState: 'paused' }}
-      >
+      <style>
+        {`
+          @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+          }
+          .animate-marquee {
+            display: flex;
+            width: max-content;
+            animation: marquee ${duration}s linear infinite;
+          }
+          .group:hover .animate-marquee {
+            animation-play-state: paused;
+          }
+        `}
+      </style>
+      <div className="animate-marquee gap-8 px-4">
         {displayItems.map((text, i) => (
           <div 
             key={i} 
@@ -53,7 +59,7 @@ export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
             {text}
           </div>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 };

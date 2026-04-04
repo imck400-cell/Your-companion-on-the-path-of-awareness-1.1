@@ -121,9 +121,29 @@ const Home: React.FC = () => {
           try {
             for (const hub of DEFAULT_HUBS) {
               const docRef = doc(db, 'pages', hub.slug);
+              const docSnap = await getDoc(docRef);
+              let existingImage = null;
+              let existingItems: any[] = [];
+              
+              if (docSnap.exists()) {
+                const data = docSnap.data();
+                existingImage = data.image;
+                existingItems = data.items || [];
+              }
+              
+              const mergedItems = hub.items.map(defaultItem => {
+                const existingItem = existingItems.find(i => i.id === defaultItem.id);
+                return {
+                  ...defaultItem,
+                  image: existingItem?.image || defaultItem.image
+                };
+              });
+
               await setDoc(docRef, {
                 ...hub,
-                createdAt: serverTimestamp(),
+                image: existingImage || hub.image || null,
+                items: mergedItems,
+                createdAt: docSnap.exists() ? docSnap.data().createdAt : serverTimestamp(),
                 updatedAt: serverTimestamp()
               });
             }
@@ -567,13 +587,13 @@ const Home: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-0.5 bg-white/20 rounded text-[10px] font-bold uppercase tracking-wider">أبرز الخدمات</span>
                       </div>
-                      <p className="text-lg font-medium">{path.services}</p>
+                      <p className="text-lg font-medium whitespace-normal break-words h-auto">{path.services}</p>
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-0.5 bg-white/20 rounded text-[10px] font-bold uppercase tracking-wider">الهدف الرئيسي</span>
                       </div>
-                      <p className="text-sm opacity-90">{path.goal}</p>
+                      <p className="text-sm opacity-90 whitespace-normal break-words h-auto">{path.goal}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -602,10 +622,10 @@ const Home: React.FC = () => {
               variant="ghost" 
               size="sm"
               onClick={() => setSelectedHubId(hub.id)}
-              className={`rounded-2xl h-auto py-4 flex flex-col gap-2 border transition-all ${colorClass}`}
+              className={`rounded-2xl h-auto py-4 flex flex-col gap-2 border transition-all ${colorClass} whitespace-normal break-words`}
             >
               {renderIcon(hub.icon, "h-6 w-6")}
-              <span className="text-xs font-bold truncate w-full">{hub.title?.[lang] || hub.title?.ar}</span>
+              <span className="text-xs font-bold w-full text-center break-words">{hub.title?.[lang] || hub.title?.ar}</span>
             </Button>
           );
         })}
