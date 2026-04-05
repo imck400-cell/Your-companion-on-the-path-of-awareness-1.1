@@ -183,6 +183,12 @@ const Home: React.FC = () => {
 
   const BENEFICIARIES = [
     {
+      title: "رفيق الذكاء الاصطناعي",
+      description: "تمكين المعلمين، الإداريين، والطلاب بأحدث أدوات وتقنيات الذكاء الاصطناعي.",
+      icon: "Cpu",
+      slug: "ai-companion"
+    },
+    {
       title: "القادة والمدراء (رفيق القادة)",
       description: "دمج الذكاء العاطفي في اتخاذ القرارات الإدارية وبناء الهوية المؤسسية القائمة على القيم.",
       icon: "Crown",
@@ -203,6 +209,14 @@ const Home: React.FC = () => {
   ];
 
   const PATHS = [
+    {
+      title: "مسار الذكاء الاصطناعي",
+      color: "bg-[#6366F1]",
+      services: "أدوات وتقنيات AI",
+      goal: "مواكبة التحول الرقمي الذكي",
+      icon: "Cpu",
+      slug: "ai-companion"
+    },
     {
       title: "المسار الطلابي",
       color: "bg-[#4FB0A5]",
@@ -496,7 +510,7 @@ const Home: React.FC = () => {
           </div>
 
           {/* Cards */}
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {PATHS.map((path, i) => {
               const hubForPath = hubs.find(h => h.slug === path.slug);
               const displayImage = hubForPath?.image;

@@ -306,6 +306,91 @@ const DynamicPage: React.FC = () => {
             {lang === 'ar' ? 'سيتم إضافة المحتوى قريباً...' : 'Content coming soon...'}
           </p>
         </div>
+      ) : page.groups && page.groups.length > 0 ? (
+        <div className="space-y-24">
+          {page.groups.map((group: any) => {
+            const groupItems = page.items.filter((item: any) => item.groupId === group.id);
+            if (groupItems.length === 0) return null;
+
+            return (
+              <div key={group.id} className="space-y-10">
+                <div className="flex items-center gap-6">
+                  <div className="h-12 w-3 bg-primary rounded-full shadow-lg shadow-primary/20" />
+                  <h2 className="text-3xl md:text-5xl font-heading font-bold text-primary tracking-tight">
+                    {group.title?.[lang] || group.title?.ar}
+                  </h2>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                  {groupItems.map((item: any, index: number) => {
+                    const itemColors = [
+                      { border: 'border-blue-500/50', bg: 'bg-blue-500/5', text: 'text-blue-700', shadow: 'shadow-blue-500/10' },
+                      { border: 'border-emerald-500/50', bg: 'bg-emerald-500/5', text: 'text-emerald-700', shadow: 'shadow-emerald-500/10' },
+                      { border: 'border-purple-500/50', bg: 'bg-purple-500/5', text: 'text-purple-700', shadow: 'shadow-purple-500/10' },
+                      { border: 'border-orange-500/50', bg: 'bg-orange-500/5', text: 'text-orange-700', shadow: 'shadow-orange-500/10' },
+                      { border: 'border-pink-500/50', bg: 'bg-pink-500/5', text: 'text-pink-700', shadow: 'shadow-pink-500/10' },
+                      { border: 'border-cyan-500/50', bg: 'bg-cyan-500/5', text: 'text-cyan-700', shadow: 'shadow-cyan-500/10' }
+                    ];
+                    const color = itemColors[index % itemColors.length];
+
+                    return (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        onClick={() => navigate(`/p/${slug}/${item.id}`)}
+                      >
+                        <Card className={`h-full hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] transition-all duration-500 cursor-pointer group border-4 md:border-[12px] border-white/90 glass-card overflow-hidden flex flex-col rounded-2xl md:rounded-[3.5rem] shadow-xl relative p-0 py-0 ring-0 ${color.bg} ${color.shadow}`}>
+                          {hasFullPermissions && (
+                            <Button
+                              size="icon"
+                              variant="secondary"
+                              className="absolute top-4 right-4 z-20 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleImageUpload(item.id);
+                              }}
+                            >
+                              <Camera className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <div className={`absolute inset-0 border-2 ${color.border} rounded-2xl md:rounded-[3.5rem] pointer-events-none`} />
+                          {item.image && (
+                            <div className="w-full aspect-video overflow-hidden border-b-2 border-inherit">
+                              <img 
+                                src={item.image} 
+                                alt="" 
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                          )}
+                          <CardHeader className="pb-2 md:pb-4 pt-4 md:pt-8 px-4 md:px-8">
+                            <CardTitle className={`font-heading text-xl md:text-3xl group-hover:scale-105 transition-transform line-clamp-2 leading-tight ${color.text}`}>
+                              {item.title?.[lang] || item.title?.ar}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="flex-1 px-4 md:px-8 pb-4 md:pb-8">
+                            <p className="text-muted-foreground line-clamp-3 text-sm md:text-lg leading-relaxed font-light">
+                              {item.content?.[lang] || item.content?.ar}
+                            </p>
+                          </CardContent>
+                          <div className="px-4 md:px-8 pb-4 md:pb-8 mt-auto">
+                            <div className={`flex items-center text-xs md:text-sm font-bold group-hover:gap-3 transition-all bg-white/50 w-fit px-3 md:px-4 py-1.5 md:py-2 rounded-full ${color.text}`}>
+                              <span>{lang === 'ar' ? 'اقرأ المزيد' : 'Read More'}</span>
+                              {lang === 'ar' ? <ChevronLeft className="h-4 w-4 mr-1" /> : <ChevronRight className="h-4 w-4 ml-1" />}
+                            </div>
+                          </div>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {page.items.map((item: any, index: number) => {
