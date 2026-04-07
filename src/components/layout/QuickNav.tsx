@@ -17,9 +17,22 @@ import {
 } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { Home, LayoutGrid, GraduationCap, Info, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, LayoutGrid, GraduationCap, Info, ChevronLeft, ChevronRight, Cpu, LayoutDashboard, Users, BookOpen, Building2 } from 'lucide-react';
 import { DEFAULT_HUBS } from '@/data/defaultPages';
 import { useLanguage } from '@/context/LanguageContext';
+import { db } from '@/lib/firebase';
+import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
+
+const iconMap: Record<string, any> = {
+  Cpu,
+  LayoutDashboard,
+  Users,
+  BookOpen,
+  Building2,
+  GraduationCap,
+  Info,
+  LayoutGrid
+};
 
 export const QuickNav: React.FC = () => {
   const { t } = useTranslation();
@@ -27,6 +40,26 @@ export const QuickNav: React.FC = () => {
   const navigate = useNavigate();
   const [selectedHub, setSelectedHub] = useState<any>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [hubs, setHubs] = useState<any[]>(DEFAULT_HUBS);
+
+  React.useEffect(() => {
+    const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedHubs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (fetchedHubs.length > 0) {
+        setHubs(fetchedHubs);
+      }
+    }, (error) => {
+      console.error("Error fetching hubs for QuickNav:", error);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const renderIcon = (iconName: string, className?: string) => {
+    const IconComponent = iconMap[iconName] || LayoutGrid;
+    return <IconComponent className={className} />;
+  };
 
   const handleHubSelect = (hub: any) => {
     setSelectedHub(hub);
@@ -53,14 +86,17 @@ export const QuickNav: React.FC = () => {
             <LayoutGrid className="h-4 w-4 text-purple-500 group-hover:scale-110 transition-transform" />
             <span className="font-semibold">{language === 'ar' ? 'مجالات المنصة' : 'Platform Areas'}</span>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-64 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 shadow-2xl rounded-2xl p-1">
-            {DEFAULT_HUBS.map((hub) => (
+          <DropdownMenuContent align="start" className="max-h-[80vh] overflow-y-auto w-64 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 shadow-2xl rounded-2xl p-1">
+            {hubs.map((hub) => (
               <DropdownMenuItem 
                 key={hub.id} 
                 onClick={() => handleHubSelect(hub)}
                 className="flex items-center justify-between cursor-pointer rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 py-3 px-3 font-medium"
               >
-                <span>{hub.title[language as keyof typeof hub.title]}</span>
+                <div className="flex items-center gap-3">
+                  {renderIcon(hub.icon, "h-4 w-4 text-purple-500")}
+                  <span>{hub.title[language as keyof typeof hub.title] || hub.title.ar}</span>
+                </div>
                 {language === 'ar' ? <ChevronLeft className="h-4 w-4 opacity-60" /> : <ChevronRight className="h-4 w-4 opacity-60" />}
               </DropdownMenuItem>
             ))}
@@ -103,25 +139,61 @@ export const QuickNav: React.FC = () => {
               </div>
             </SheetHeader>
             <ScrollArea className="h-[calc(100vh-120px)] pr-2">
-              <div className="flex flex-col gap-1.5 py-2">
-                {selectedHub?.items.map((item: any, idx: number) => {
-                  const colors = ['bg-blue-50 hover:bg-blue-100 text-blue-800', 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800', 'bg-purple-50 hover:bg-purple-100 text-purple-800', 'bg-orange-50 hover:bg-orange-100 text-orange-800', 'bg-pink-50 hover:bg-pink-100 text-pink-800'];
-                  return (
-                    <Button
-                      key={item.id}
-                      variant="ghost"
-                      className={`justify-start text-right h-auto py-3 px-4 whitespace-normal rounded-xl font-medium transition-all ${colors[idx % colors.length]}`}
-                      onClick={() => handleItemSelect(selectedHub.id, item.id)}
-                    >
-                      <div className="flex flex-col items-start text-right w-full gap-0.5">
-                        <span className="font-bold text-base">{item.title[language as keyof typeof item.title]}</span>
-                        <span className="text-xs opacity-70 line-clamp-1">
-                          {item.content[language as keyof typeof item.content]}
-                        </span>
+              <div className="flex flex-col gap-4 py-2">
+                {selectedHub?.groups && selectedHub.groups.length > 0 ? (
+                  selectedHub.groups.map((group: any) => (
+                    <div key={group.id} className="space-y-2">
+                      <h4 className="px-4 py-2 text-sm font-bold text-purple-700 bg-purple-50 dark:bg-purple-900/30 rounded-lg sticky top-0 z-10">
+                        {group.title[language as keyof typeof group.title] || group.title.ar}
+                      </h4>
+                      <div className="flex flex-col gap-1.5 px-1">
+                        {selectedHub.items
+                          .filter((item: any) => item.groupId === group.id)
+                          .map((item: any, idx: number) => {
+                            const colors = ['bg-blue-50/50 hover:bg-blue-100/50 text-blue-800', 'bg-emerald-50/50 hover:bg-emerald-100/50 text-emerald-800', 'bg-purple-50/50 hover:bg-purple-100/50 text-purple-800', 'bg-orange-50/50 hover:bg-orange-100/50 text-orange-800', 'bg-pink-50/50 hover:bg-pink-100/50 text-pink-800'];
+                            return (
+                              <Button
+                                key={item.id}
+                                variant="ghost"
+                                className={`justify-start text-right h-auto py-3 px-4 whitespace-normal rounded-xl font-medium transition-all ${colors[idx % colors.length]}`}
+                                onClick={() => handleItemSelect(selectedHub.slug || selectedHub.id, item.id)}
+                              >
+                                <div className="flex flex-col items-start text-right w-full gap-0.5">
+                                  <span className="font-bold text-sm leading-tight">{item.title[language as keyof typeof item.title] || item.title.ar}</span>
+                                  {item.content && (
+                                    <span className="text-[10px] opacity-70 line-clamp-1">
+                                      {item.content[language as keyof typeof item.content] || item.content.ar}
+                                    </span>
+                                  )}
+                                </div>
+                              </Button>
+                            );
+                          })}
                       </div>
-                    </Button>
-                  );
-                })}
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col gap-1.5">
+                    {selectedHub?.items.map((item: any, idx: number) => {
+                      const colors = ['bg-blue-50 hover:bg-blue-100 text-blue-800', 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800', 'bg-purple-50 hover:bg-purple-100 text-purple-800', 'bg-orange-50 hover:bg-orange-100 text-orange-800', 'bg-pink-50 hover:bg-pink-100 text-pink-800'];
+                      return (
+                        <Button
+                          key={item.id}
+                          variant="ghost"
+                          className={`justify-start text-right h-auto py-3 px-4 whitespace-normal rounded-xl font-medium transition-all ${colors[idx % colors.length]}`}
+                          onClick={() => handleItemSelect(selectedHub.slug || selectedHub.id, item.id)}
+                        >
+                          <div className="flex flex-col items-start text-right w-full gap-0.5">
+                            <span className="font-bold text-base">{item.title[language as keyof typeof item.title] || item.title.ar}</span>
+                            <span className="text-xs opacity-70 line-clamp-1">
+                              {item.content[language as keyof typeof item.content] || item.content.ar}
+                            </span>
+                          </div>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </ScrollArea>
           </SheetContent>
