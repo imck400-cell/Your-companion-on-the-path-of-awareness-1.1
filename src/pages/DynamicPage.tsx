@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
@@ -47,9 +47,24 @@ const DynamicPage: React.FC = () => {
           }
         }
 
+        let pageData = null;
+        let pageId = null;
+
         if (!querySnapshot.empty) {
-          const pageData = querySnapshot.docs[0].data();
-          setPage({ id: querySnapshot.docs[0].id, ...pageData });
+          pageData = querySnapshot.docs[0].data();
+          pageId = querySnapshot.docs[0].id;
+        } else {
+          // If still not found by query, let's try assuming the slug is actually the document ID
+          const docRef = doc(db, 'pages', slug);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            pageData = docSnap.data();
+            pageId = docSnap.id;
+          }
+        }
+
+        if (pageData && pageId) {
+          setPage({ id: pageId, ...pageData });
           
           if (itemId && pageData.items) {
             const foundItem = pageData.items.find((i: any) => i.id === itemId);
@@ -63,10 +78,10 @@ const DynamicPage: React.FC = () => {
             setItem(null);
           }
           
-          trackEvent('page_view', { page: slug, pageId: querySnapshot.docs[0].id });
+          trackEvent('page_view', { page: slug, pageId: pageId });
         } else {
           // If still not found, wait a bit or redirect
-          console.warn(`Page not found for slug: ${slug}`);
+          console.warn(`Page not found for slug or id: ${slug}`);
           navigate('/');
         }
       } catch (error) {
@@ -185,38 +200,68 @@ const DynamicPage: React.FC = () => {
                 {item.content?.[lang] || item.content?.ar}
               </div>
               
+              {/* Content Images */}
+              {item.contentImages && (
+                <div className="mt-8 space-y-6">
+                  {item.contentImages.split(',').filter((img: string) => img.trim() !== '').map((img: string, i: number) => (
+                    <div key={i} className="w-full rounded-2xl overflow-hidden shadow-lg border-2 border-primary/10">
+                      <img 
+                        src={img.trim()} 
+                        alt="Content Additional Image" 
+                        className="w-full h-auto object-contain"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               {/* Media Enclosures */}
               {item.pdfUrl && (
                 <div className="mt-12 space-y-6">
-                  <h3 className="font-heading text-2xl font-bold text-primary border-b pb-4">ملف المرفق (PDF)</h3>
-                  <div className="w-full bg-muted/20 p-2 rounded-3xl border-2 border-primary/10 shadow-inner">
-                    <iframe 
-                      src={item.pdfUrl.includes('drive.google.com') ? item.pdfUrl.replace('/view', '/preview') : item.pdfUrl} 
-                      className="w-full h-[70vh] md:h-[800px] rounded-2xl" 
-                      title="PDF Viewer" 
-                    />
-                  </div>
-                  <Button 
-                    onClick={() => window.open(item.pdfUrl, '_blank')} 
-                    variant="default" 
-                    className="rounded-full shadow-lg hover:shadow-xl transition-all"
-                  >
-                    فتح / تحميل ملف PDF في نافذة جديدة
-                  </Button>
+                  <h3 className="font-heading text-2xl font-bold text-primary border-b pb-4">ملفات المرفقات (PDF)</h3>
+                  {item.pdfUrl.split(',').filter((pdf: string) => pdf.trim() !== '').map((pdf: string, i: number) => {
+                    const trimmedPdf = pdf.trim();
+                    return (
+                      <div key={i} className="space-y-4 mb-8">
+                        <div className="w-full bg-muted/20 p-2 rounded-3xl border-2 border-primary/10 shadow-inner">
+                          <iframe 
+                            src={trimmedPdf.includes('drive.google.com') ? trimmedPdf.replace('/view', '/preview') : trimmedPdf} 
+                            className="w-full h-[70vh] md:h-[800px] rounded-2xl" 
+                            title={`PDF Viewer ${i + 1}`} 
+                          />
+                        </div>
+                        <Button 
+                          onClick={() => window.open(trimmedPdf, '_blank')} 
+                          variant="default" 
+                          className="rounded-full shadow-lg hover:shadow-xl transition-all"
+                        >
+                          فتح / تحميل ملف PDF {i + 1} في نافذة جديدة
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
               {item.videoUrl && (
                 <div className="mt-12 space-y-6">
-                  <h3 className="font-heading text-2xl font-bold text-primary border-b pb-4">مقطع الفيديو</h3>
-                  <div className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 bg-black">
-                    <iframe 
-                      src={item.videoUrl.includes('youtu') ? item.videoUrl.replace('watch?v=', 'embed/').split('&')[0].replace('youtu.be/', 'youtube.com/embed/') : item.videoUrl} 
-                      className="absolute top-0 left-0 w-full h-full" 
-                      allowFullScreen 
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      title="Video Player"
-                    />
+                  <h3 className="font-heading text-2xl font-bold text-primary border-b pb-4">مقاطع الفيديو</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {item.videoUrl.split(',').filter((vid: string) => vid.trim() !== '').map((vid: string, i: number) => {
+                      const trimmedVid = vid.trim();
+                      return (
+                        <div key={i} className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 bg-black">
+                          <iframe 
+                            src={trimmedVid.includes('youtu') ? trimmedVid.replace('watch?v=', 'embed/').split('&')[0].replace('youtu.be/', 'youtube.com/embed/') : trimmedVid} 
+                            className="absolute top-0 left-0 w-full h-full" 
+                            allowFullScreen 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            title={`Video Player ${i + 1}`}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

@@ -280,6 +280,47 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel
                         onChange={(e) => updateItem(item.id, 'title.ar', e.target.value)}
                       />
                     </div>
+                    {formData.groups && formData.groups.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>القسم (المجموعة)</Label>
+                        <Select 
+                          value={item.groupId || ''} 
+                          onValueChange={(val) => updateItem(item.id, 'groupId', val)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="اختر القسم" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">بدون قسم (أخرى)</SelectItem>
+                            {formData.groups.map((g: any) => (
+                              <SelectItem key={g.id} value={g.id}>{g.title.ar}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    <div className="space-y-2 col-span-2 md:col-span-1">
+                      <Label>رابط الفرع المباشر (تلقائي)</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          readOnly 
+                          value={`${window.location.origin}/p/${formData.slug || 'new'}/${item.id}`} 
+                          className="bg-muted/50 text-xs text-left" 
+                          dir="ltr"
+                        />
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/p/${formData.slug || 'new'}/${item.id}`);
+                            toast.success('تم نسخ الرابط');
+                          }}
+                        >
+                          نسخ
+                        </Button>
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       <Label>صورة الفرع</Label>
                       <div className="flex items-center gap-2">
@@ -343,20 +384,20 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel
                   </div>
                   
                   {/* Additional Attachments */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-dashed">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-dashed">
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-1 text-xs"><FileText className="w-3 h-3 text-destructive" /> رابط ملف PDF</Label>
+                      <Label className="flex items-center gap-1 text-xs"><FileText className="w-3 h-3 text-destructive" /> روابط ملفات PDF</Label>
                       <Input 
-                        placeholder="https://.../file.pdf" 
+                        placeholder="افصل بين الروابط بفاصلة (,)" 
                         value={item.pdfUrl || ''} 
                         onChange={(e) => updateItem(item.id, 'pdfUrl', e.target.value)}
                         className="h-8 text-xs"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-1 text-xs"><Video className="w-3 h-3 text-blue-500" /> رابط فيديو</Label>
+                      <Label className="flex items-center gap-1 text-xs"><Video className="w-3 h-3 text-blue-500" /> روابط فيديو</Label>
                       <Input 
-                        placeholder="Youtube or mp4 link..." 
+                        placeholder="افصل بين الروابط بفاصلة (,)" 
                         value={item.videoUrl || ''} 
                         onChange={(e) => updateItem(item.id, 'videoUrl', e.target.value)}
                         className="h-8 text-xs"
@@ -370,6 +411,56 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel
                         onChange={(e) => updateItem(item.id, 'externalLinks', e.target.value)}
                         className="h-8 text-xs"
                       />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1 text-xs"><ImageIcon className="w-3 h-3 text-purple-500" /> صور إضافية بداخل المحتوى</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="افصل بين الروابط بفاصلة (,)" 
+                          value={item.contentImages || ''} 
+                          onChange={(e) => updateItem(item.id, 'contentImages', e.target.value)}
+                          className="h-8 text-xs"
+                        />
+                        <div className="relative shrink-0">
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            multiple
+                            className="hidden" 
+                            id={`item-content-images-upload-${item.id}`}
+                            onChange={async (e) => {
+                              const files = Array.from(e.target.files || []);
+                              if (files.length === 0) return;
+                              setIsUploading(`contentImages-${item.id}`);
+                              try {
+                                const newImages = [];
+                                for (const file of files) {
+                                  newImages.push(await compressImage(file));
+                                }
+                                const currentImages = item.contentImages ? `${item.contentImages},` : '';
+                                updateItem(item.id, 'contentImages', currentImages + newImages.join(','));
+                                toast.success('تم رفع الصور الإضافية بنجاح');
+                              } catch (error) {
+                                console.error('Images upload error:', error);
+                                toast.error('حدث خطأ أثناء رفع الصور');
+                              } finally {
+                                setIsUploading(null);
+                              }
+                            }}
+                          />
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            type="button"
+                            disabled={isUploading === `contentImages-${item.id}`}
+                            className="h-8 text-[10px] gap-1 px-2"
+                            onClick={() => document.getElementById(`item-content-images-upload-${item.id}`)?.click()}
+                          >
+                            {isUploading === `contentImages-${item.id}` ? '...' : <Plus className="h-3 w-3" />}
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -141,37 +141,72 @@ export const QuickNav: React.FC = () => {
             <ScrollArea className="h-[calc(100vh-120px)] pr-2">
               <div className="flex flex-col gap-4 py-2">
                 {selectedHub?.groups && selectedHub.groups.length > 0 ? (
-                  selectedHub.groups.map((group: any) => (
-                    <div key={group.id} className="space-y-2">
-                      <h4 className="px-4 py-2 text-sm font-bold text-purple-700 bg-purple-50 dark:bg-purple-900/30 rounded-lg sticky top-0 z-10">
-                        {group.title[language as keyof typeof group.title] || group.title.ar}
-                      </h4>
-                      <div className="flex flex-col gap-1.5 px-1">
-                        {selectedHub.items
-                          .filter((item: any) => item.groupId === group.id)
-                          .map((item: any, idx: number) => {
-                            const colors = ['bg-blue-50/50 hover:bg-blue-100/50 text-blue-800', 'bg-emerald-50/50 hover:bg-emerald-100/50 text-emerald-800', 'bg-purple-50/50 hover:bg-purple-100/50 text-purple-800', 'bg-orange-50/50 hover:bg-orange-100/50 text-orange-800', 'bg-pink-50/50 hover:bg-pink-100/50 text-pink-800'];
-                            return (
-                              <Button
-                                key={item.id}
-                                variant="ghost"
-                                className={`justify-start text-right h-auto py-3 px-4 whitespace-normal rounded-xl font-medium transition-all ${colors[idx % colors.length]}`}
-                                onClick={() => handleItemSelect(selectedHub.slug || selectedHub.id, item.id)}
-                              >
-                                <div className="flex flex-col items-start text-right w-full gap-0.5">
-                                  <span className="font-bold text-sm leading-tight">{item.title[language as keyof typeof item.title] || item.title.ar}</span>
-                                  {item.content && (
-                                    <span className="text-[10px] opacity-70 line-clamp-1">
-                                      {item.content[language as keyof typeof item.content] || item.content.ar}
-                                    </span>
-                                  )}
-                                </div>
-                              </Button>
-                            );
-                          })}
+                  <>
+                    {selectedHub.groups.map((group: any) => (
+                      <div key={group.id} className="space-y-2">
+                        <h4 className="px-4 py-2 text-sm font-bold text-purple-700 bg-purple-50 dark:bg-purple-900/30 rounded-lg sticky top-0 z-10">
+                          {group.title[language as keyof typeof group.title] || group.title.ar}
+                        </h4>
+                        <div className="flex flex-col gap-1.5 px-1">
+                          {selectedHub.items
+                            .filter((item: any) => item.groupId === group.id)
+                            .map((item: any, idx: number) => {
+                              const colors = ['bg-blue-50/50 hover:bg-blue-100/50 text-blue-800', 'bg-emerald-50/50 hover:bg-emerald-100/50 text-emerald-800', 'bg-purple-50/50 hover:bg-purple-100/50 text-purple-800', 'bg-orange-50/50 hover:bg-orange-100/50 text-orange-800', 'bg-pink-50/50 hover:bg-pink-100/50 text-pink-800'];
+                              return (
+                                <Button
+                                  key={item.id}
+                                  variant="ghost"
+                                  className={`justify-start text-right h-auto py-3 px-4 whitespace-normal rounded-xl font-medium transition-all ${colors[idx % colors.length]}`}
+                                  onClick={() => handleItemSelect(selectedHub.slug || selectedHub.id, item.id)}
+                                >
+                                  <div className="flex flex-col items-start text-right w-full gap-0.5">
+                                    <span className="font-bold text-sm leading-tight">{item.title[language as keyof typeof item.title] || item.title.ar}</span>
+                                    {item.content && (
+                                      <span className="text-[10px] opacity-70 line-clamp-1">
+                                        {item.content[language as keyof typeof item.content] || item.content.ar}
+                                      </span>
+                                    )}
+                                  </div>
+                                </Button>
+                              );
+                            })}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                    
+                    {/* Render uncategorized items */}
+                    {selectedHub.items.filter((item: any) => !item.groupId || !selectedHub.groups.find((g: any) => g.id === item.groupId)).length > 0 && (
+                      <div className="space-y-2 mt-4">
+                        <h4 className="px-4 py-2 text-sm font-bold text-purple-700 bg-purple-50 dark:bg-purple-900/30 rounded-lg sticky top-0 z-10">
+                          {language === 'ar' ? 'أقسام أخرى' : 'Other Sections'}
+                        </h4>
+                        <div className="flex flex-col gap-1.5 px-1">
+                          {selectedHub.items
+                            .filter((item: any) => !item.groupId || !selectedHub.groups.find((g: any) => g.id === item.groupId))
+                            .map((item: any, idx: number) => {
+                              const colors = ['bg-blue-50/50 hover:bg-blue-100/50 text-blue-800', 'bg-emerald-50/50 hover:bg-emerald-100/50 text-emerald-800', 'bg-purple-50/50 hover:bg-purple-100/50 text-purple-800', 'bg-orange-50/50 hover:bg-orange-100/50 text-orange-800', 'bg-pink-50/50 hover:bg-pink-100/50 text-pink-800'];
+                              return (
+                                <Button
+                                  key={item.id}
+                                  variant="ghost"
+                                  className={`justify-start text-right h-auto py-3 px-4 whitespace-normal rounded-xl font-medium transition-all ${colors[idx % colors.length]}`}
+                                  onClick={() => handleItemSelect(selectedHub.slug || selectedHub.id, item.id)}
+                                >
+                                  <div className="flex flex-col items-start text-right w-full gap-0.5">
+                                    <span className="font-bold text-sm leading-tight">{item.title[language as keyof typeof item.title] || item.title.ar}</span>
+                                    {item.content && (
+                                      <span className="text-[10px] opacity-70 line-clamp-1">
+                                        {item.content[language as keyof typeof item.content] || item.content.ar}
+                                      </span>
+                                    )}
+                                  </div>
+                                </Button>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="flex flex-col gap-1.5">
                     {selectedHub?.items.map((item: any, idx: number) => {
