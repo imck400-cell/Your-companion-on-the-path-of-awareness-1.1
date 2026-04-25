@@ -16,6 +16,63 @@ interface PageBuilderProps {
   onCancel: () => void;
 }
 
+const MultiLinkInput = ({ value, onChange, label, placeholder, icon: Icon, extraAction }: any) => {
+  const links = (value || '').split(',').filter((l: string) => l.trim().length > 0);
+  const [newLink, setNewLink] = useState('');
+
+  const handleAdd = () => {
+    if (newLink.trim()) {
+      onChange([...links, newLink.trim()].join(','));
+      setNewLink('');
+    }
+  };
+
+  const handleRemove = (idx: number) => {
+    const arr = [...links];
+    arr.splice(idx, 1);
+    onChange(arr.join(','));
+  };
+
+  return (
+    <div className="space-y-2 border p-3 rounded-lg bg-muted/10 shrink-0">
+      <Label className="flex items-center gap-1 text-xs font-bold"><Icon className="w-4 h-4 text-primary" /> {label}</Label>
+      <div className="space-y-2">
+        {links.map((link: string, idx: number) => (
+          <div key={idx} className="flex gap-2 items-center bg-background p-1.5 rounded-md border shadow-sm">
+            {link.startsWith('data:image/') || link.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
+              <div className="h-8 w-8 shrink-0 rounded overflow-hidden border">
+                <img src={link} alt="" className="w-full h-full object-cover" />
+              </div>
+            ) : null}
+            <Input readOnly value={link} className="h-7 text-xs flex-1 border-0 bg-transparent focus-visible:ring-0" />
+            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive shrink-0 hover:bg-destructive/10" onClick={() => handleRemove(idx)}>
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2 items-center pt-1">
+        <Input 
+          placeholder={placeholder} 
+          value={newLink} 
+          onChange={(e) => setNewLink(e.target.value)}
+          className="h-8 text-xs flex-1"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleAdd();
+            }
+          }}
+        />
+        <Button type="button" size="sm" variant="secondary" className="h-8 px-2" onClick={handleAdd}>
+          <Plus className="h-4 w-4" />
+        </Button>
+        {extraAction && extraAction(onChange, links)}
+      </div>
+    </div>
+  );
+};
+
 export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel }) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState(page || {
@@ -263,16 +320,20 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel
             </CardHeader>
             <CardContent className="space-y-6">
               {formData.items?.map((item: any, index: number) => (
-                <div key={item.id} className="p-4 border rounded-xl space-y-4 relative group">
+                <div key={item.id} className="p-5 border-2 border-primary/20 rounded-2xl space-y-5 relative shadow-md bg-card transition-all hover:border-primary/40">
+                  <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-xl opacity-80" />
                   <Button 
-                    variant="ghost" 
+                    variant="destructive" 
                     size="icon" 
-                    className="absolute top-2 left-2 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-3 left-3 shadow-sm rounded-full h-8 w-8"
                     onClick={() => removeItem(item.id)}
                   >
-                    <X className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="flex gap-2 items-center text-sm font-bold text-muted-foreground pb-2 border-b">
+                    <span>الفرع #{index + 1}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <Label>عنوان الفرع (عربي)</Label>
                       <Input 
@@ -384,44 +445,38 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel
                   </div>
                   
                   {/* Additional Attachments */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-dashed">
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-1 text-xs"><FileText className="w-3 h-3 text-destructive" /> روابط ملفات PDF</Label>
-                      <Input 
-                        placeholder="افصل بين الروابط بفاصلة (,)" 
-                        value={item.pdfUrl || ''} 
-                        onChange={(e) => updateItem(item.id, 'pdfUrl', e.target.value)}
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-1 text-xs"><Video className="w-3 h-3 text-blue-500" /> روابط فيديو</Label>
-                      <Input 
-                        placeholder="افصل بين الروابط بفاصلة (,)" 
-                        value={item.videoUrl || ''} 
-                        onChange={(e) => updateItem(item.id, 'videoUrl', e.target.value)}
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-1 text-xs"><LinkIcon className="w-3 h-3 text-emerald-500" /> روابط خارجية</Label>
-                      <Input 
-                        placeholder="افصل بين الروابط بفاصلة (,)" 
-                        value={item.externalLinks || ''} 
-                        onChange={(e) => updateItem(item.id, 'externalLinks', e.target.value)}
-                        className="h-8 text-xs"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6 border-t border-dashed">
+                    <MultiLinkInput
+                      label="روابط ملفات PDF"
+                      placeholder="https://.../file.pdf"
+                      icon={FileText}
+                      value={item.pdfUrl}
+                      onChange={(val: string) => updateItem(item.id, 'pdfUrl', val)}
+                    />
                     
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-1 text-xs"><ImageIcon className="w-3 h-3 text-purple-500" /> صور إضافية بداخل المحتوى</Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          placeholder="افصل بين الروابط بفاصلة (,)" 
-                          value={item.contentImages || ''} 
-                          onChange={(e) => updateItem(item.id, 'contentImages', e.target.value)}
-                          className="h-8 text-xs"
-                        />
+                    <MultiLinkInput
+                      label="روابط فيديو"
+                      placeholder="Youtube or mp4 link..."
+                      icon={Video}
+                      value={item.videoUrl}
+                      onChange={(val: string) => updateItem(item.id, 'videoUrl', val)}
+                    />
+
+                    <MultiLinkInput
+                      label="روابط خارجية"
+                      placeholder="https://example.com"
+                      icon={LinkIcon}
+                      value={item.externalLinks}
+                      onChange={(val: string) => updateItem(item.id, 'externalLinks', val)}
+                    />
+                    
+                    <MultiLinkInput
+                      label="صور إضافية بداخل المحتوى"
+                      placeholder="رابط الصورة..."
+                      icon={ImageIcon}
+                      value={item.contentImages}
+                      onChange={(val: string) => updateItem(item.id, 'contentImages', val)}
+                      extraAction={(onChange: any, links: string[]) => (
                         <div className="relative shrink-0">
                           <input 
                             type="file" 
@@ -438,8 +493,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel
                                 for (const file of files) {
                                   newImages.push(await compressImage(file));
                                 }
-                                const currentImages = item.contentImages ? `${item.contentImages},` : '';
-                                updateItem(item.id, 'contentImages', currentImages + newImages.join(','));
+                                onChange([...links, ...newImages].join(','));
                                 toast.success('تم رفع الصور الإضافية بنجاح');
                               } catch (error) {
                                 console.error('Images upload error:', error);
@@ -454,14 +508,14 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel
                             size="sm"
                             type="button"
                             disabled={isUploading === `contentImages-${item.id}`}
-                            className="h-8 text-[10px] gap-1 px-2"
+                            className="h-8 gap-1 px-3"
                             onClick={() => document.getElementById(`item-content-images-upload-${item.id}`)?.click()}
                           >
-                            {isUploading === `contentImages-${item.id}` ? '...' : <Plus className="h-3 w-3" />}
+                            {isUploading === `contentImages-${item.id}` ? '...' : <ImageIcon className="h-4 w-4" />}
                           </Button>
                         </div>
-                      </div>
-                    </div>
+                      )}
+                    />
                   </div>
                 </div>
               ))}
