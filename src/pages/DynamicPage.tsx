@@ -15,8 +15,8 @@ import { compressImage, getBase64Size } from '@/lib/imageUtils';
 
 import { handleFirestoreError, OperationType } from '@/lib/firestoreErrorHandler';
 
-const parseLinks = (val: string) => {
-  if (!val) return [];
+const parseLinks = (val: string | any) => {
+  if (!val || typeof val !== 'string') return [];
   if (val.includes('||')) return val.split('||').filter((l: string) => l.trim().length > 0);
   if (val.includes('data:image/')) {
     const urls = [];
@@ -212,9 +212,9 @@ const DynamicPage: React.FC = () => {
           </div>
 
           <Card className="border-none shadow-sm glass-card p-6 md:p-10 rounded-3xl mt-8">
-            <CardContent className="p-0 prose prose-lg dark:prose-invert max-w-none">
+            <CardContent className="p-0">
               <div 
-                className="text-lg md:text-2xl leading-loose whitespace-pre-wrap text-foreground/95 font-medium font-sans text-justify"
+                className="prose prose-lg dark:prose-invert max-w-none text-lg md:text-2xl leading-loose whitespace-pre-wrap text-foreground/95 font-medium font-sans text-justify"
                 style={{ lineHeight: '2.2' }}
               >
                 {item.content?.[lang] || item.content?.ar}
@@ -228,7 +228,7 @@ const DynamicPage: React.FC = () => {
                       <img 
                         src={img.trim()} 
                         alt="Content Additional Image" 
-                        className="w-full h-auto object-contain"
+                        className="w-full h-auto max-h-[80vh] object-contain"
                         referrerPolicy="no-referrer"
                       />
                     </div>

@@ -16,8 +16,8 @@ interface PageBuilderProps {
   onCancel: () => void;
 }
 
-const parseLinks = (val: string) => {
-  if (!val) return [];
+const parseLinks = (val: string | any) => {
+  if (!val || typeof val !== 'string') return [];
   if (val.includes('||')) return val.split('||').filter((l: string) => l.trim().length > 0);
   if (val.includes('data:image/')) {
     const urls = [];

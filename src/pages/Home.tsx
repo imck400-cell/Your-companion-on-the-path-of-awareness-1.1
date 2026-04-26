@@ -362,7 +362,7 @@ const Home: React.FC = () => {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className="pb-20 pt-0"
     >
 
@@ -401,7 +401,7 @@ const Home: React.FC = () => {
         <motion.p 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          transition={{ duration: 0.3 }}
           className="text-base md:text-xl text-muted-foreground leading-relaxed px-4"
         >
           منصة "رفيقك" كشريك استراتيجي يقدم حلولاً متكاملة تجمع بين الوعي الإنساني والكفاءة المهنية لمختلف فئات المجتمع المؤسسي والتعليمي.

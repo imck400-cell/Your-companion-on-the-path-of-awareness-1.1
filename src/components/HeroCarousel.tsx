@@ -94,9 +94,9 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides = [], lang = 
           
           <div className="absolute inset-0 z-30 flex flex-col justify-end p-6 md:p-12 text-white text-right pointer-events-none">
             <motion.div
-              initial={{ y: 20, opacity: 0 }}
+              initial={{ y: 15, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
+              transition={{ duration: 0.3 }}
               className="space-y-2 max-w-2xl ml-auto pointer-events-auto"
             >
               <h2 className="text-xl md:text-4xl lg:text-5xl font-heading font-bold leading-tight drop-shadow-2xl">
