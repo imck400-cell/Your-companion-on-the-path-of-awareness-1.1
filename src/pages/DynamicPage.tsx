@@ -10,7 +10,6 @@ import { trackEvent } from '@/lib/analytics';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, ChevronLeft, Users, Camera } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { compressImage, getBase64Size } from '@/lib/imageUtils';
 
@@ -271,16 +270,21 @@ const DynamicPage: React.FC = () => {
                   <h3 className="font-heading text-2xl font-bold text-primary mb-4">روابط ومراجع إضافية</h3>
                   <div className="flex flex-wrap gap-4">
                     {item.externalLinks.split(',').filter((l: string) => l.trim() !== '').map((link: string, i: number) => {
-                      const trimmedLink = link.trim();
-                      const isYoutube = trimmedLink.includes('youtu');
+                      const parts = link.trim().split('::');
+                      const url = parts[0];
+                      const title = parts[1];
+                      const isYoutube = url.includes('youtu');
+                      
+                      let displayText = title || (isYoutube ? 'مشاهدة على يوتيوب' : 'زيارة الرابط الخارجي');
+
                       return (
                         <Button 
                           key={i} 
-                          onClick={() => window.open(trimmedLink, '_blank')} 
-                          variant={isYoutube ? "destructive" : "secondary"} 
+                          onClick={() => window.open(url, '_blank')} 
+                          variant={isYoutube && !title ? "destructive" : "secondary"} 
                           className="rounded-full text-sm md:text-base font-bold shadow-md hover:scale-105 transition-transform"
                         >
-                          {isYoutube ? 'مشاهدة على يوتيوب' : 'زيارة الرابط الخارجي'}
+                          {displayText}
                         </Button>
                       );
                     })}

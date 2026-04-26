@@ -73,6 +73,83 @@ const MultiLinkInput = ({ value, onChange, label, placeholder, icon: Icon, extra
   );
 };
 
+const MultiLinkWithTitleInput = ({ value, onChange, label, icon: Icon }: any) => {
+  const links = (value || '').split(',').filter((l: string) => l.trim().length > 0);
+  const [newUrl, setNewUrl] = useState('');
+  const [newTitle, setNewTitle] = useState('');
+
+  const handleAdd = () => {
+    if (newUrl.trim()) {
+      const entry = newTitle.trim() ? `${newUrl.trim()}::${newTitle.trim()}` : newUrl.trim();
+      onChange([...links, entry].join(','));
+      setNewUrl('');
+      setNewTitle('');
+    }
+  };
+
+  const handleRemove = (idx: number) => {
+    const arr = [...links];
+    arr.splice(idx, 1);
+    onChange(arr.join(','));
+  };
+
+  return (
+    <div className="space-y-2 border p-3 rounded-lg bg-muted/10 shrink-0">
+      <Label className="flex items-center gap-1 text-xs font-bold"><Icon className="w-4 h-4 text-primary" /> {label}</Label>
+      <div className="space-y-2">
+        {links.map((link: string, idx: number) => {
+          const parts = link.split('::');
+          const url = parts[0];
+          const title = parts[1] || '';
+          return (
+            <div key={idx} className="flex gap-2 items-center bg-background p-1.5 rounded-md border shadow-sm">
+              <div className="flex-1 flex flex-col gap-1">
+                {title && <span className="text-[10px] font-bold text-muted-foreground px-1 truncate max-w-[200px]">{title}</span>}
+                <Input readOnly value={url} className="h-7 text-xs border-0 bg-transparent focus-visible:ring-0" />
+              </div>
+              <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive shrink-0 hover:bg-destructive/10" onClick={() => handleRemove(idx)}>
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex flex-col gap-2 pt-2 border-t mt-2">
+        <Input 
+          placeholder="عنوان الرابط الداخلي (اختياري، مثلاً: موقع ويكيبيديا)" 
+          value={newTitle} 
+          onChange={(e) => setNewTitle(e.target.value)}
+          className="h-8 text-xs"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              document.getElementById('external-link-url-input')?.focus();
+            }
+          }}
+        />
+        <div className="flex gap-2 items-center">
+          <Input 
+            id="external-link-url-input"
+            placeholder="رابط الموقع (https://...)" 
+            value={newUrl} 
+            onChange={(e) => setNewUrl(e.target.value)}
+            className="h-8 text-xs flex-1"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAdd();
+              }
+            }}
+          />
+          <Button type="button" size="sm" variant="secondary" className="h-8 px-2" onClick={handleAdd}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel }) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState(page || {
@@ -462,9 +539,8 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel
                       onChange={(val: string) => updateItem(item.id, 'videoUrl', val)}
                     />
 
-                    <MultiLinkInput
+                    <MultiLinkWithTitleInput
                       label="روابط خارجية"
-                      placeholder="https://example.com"
                       icon={LinkIcon}
                       value={item.externalLinks}
                       onChange={(val: string) => updateItem(item.id, 'externalLinks', val)}
@@ -485,7 +561,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel
                             className="hidden" 
                             id={`item-content-images-upload-${item.id}`}
                             onChange={async (e) => {
-                              const files = Array.from(e.target.files || []);
+                              const files = Array.from(e.target.files || []) as File[];
                               if (files.length === 0) return;
                               setIsUploading(`contentImages-${item.id}`);
                               try {

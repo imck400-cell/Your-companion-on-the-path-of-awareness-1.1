@@ -89,7 +89,7 @@ const Home: React.FC = () => {
 
               await setDoc(docRef, {
                 ...hub,
-                image: existingImage || hub.image || null,
+                image: existingImage || (hub as any).image || null,
                 items: mergedItems,
                 createdAt: docSnap.exists() ? docSnap.data().createdAt : serverTimestamp(),
                 updatedAt: serverTimestamp()
