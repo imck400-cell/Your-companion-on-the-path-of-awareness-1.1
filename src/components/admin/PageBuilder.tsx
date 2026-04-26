@@ -17,12 +17,12 @@ interface PageBuilderProps {
 }
 
 const MultiLinkInput = ({ value, onChange, label, placeholder, icon: Icon, extraAction }: any) => {
-  const links = (value || '').split(',').filter((l: string) => l.trim().length > 0);
+  const links = (value || '').split(value?.includes('||') ? '||' : ',').filter((l: string) => l.trim().length > 0);
   const [newLink, setNewLink] = useState('');
 
   const handleAdd = () => {
     if (newLink.trim()) {
-      onChange([...links, newLink.trim()].join(','));
+      onChange([...links, newLink.trim()].join('||'));
       setNewLink('');
     }
   };
@@ -30,7 +30,7 @@ const MultiLinkInput = ({ value, onChange, label, placeholder, icon: Icon, extra
   const handleRemove = (idx: number) => {
     const arr = [...links];
     arr.splice(idx, 1);
-    onChange(arr.join(','));
+    onChange(arr.join('||'));
   };
 
   return (
@@ -74,14 +74,14 @@ const MultiLinkInput = ({ value, onChange, label, placeholder, icon: Icon, extra
 };
 
 const MultiLinkWithTitleInput = ({ value, onChange, label, icon: Icon }: any) => {
-  const links = (value || '').split(',').filter((l: string) => l.trim().length > 0);
+  const links = (value || '').split(value?.includes('||') ? '||' : ',').filter((l: string) => l.trim().length > 0);
   const [newUrl, setNewUrl] = useState('');
   const [newTitle, setNewTitle] = useState('');
 
   const handleAdd = () => {
     if (newUrl.trim()) {
       const entry = newTitle.trim() ? `${newUrl.trim()}::${newTitle.trim()}` : newUrl.trim();
-      onChange([...links, entry].join(','));
+      onChange([...links, entry].join('||'));
       setNewUrl('');
       setNewTitle('');
     }
@@ -90,7 +90,7 @@ const MultiLinkWithTitleInput = ({ value, onChange, label, icon: Icon }: any) =>
   const handleRemove = (idx: number) => {
     const arr = [...links];
     arr.splice(idx, 1);
-    onChange(arr.join(','));
+    onChange(arr.join('||'));
   };
 
   return (

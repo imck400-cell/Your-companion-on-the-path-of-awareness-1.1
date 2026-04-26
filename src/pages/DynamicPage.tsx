@@ -202,7 +202,7 @@ const DynamicPage: React.FC = () => {
               {/* Content Images */}
               {item.contentImages && (
                 <div className="mt-8 space-y-6">
-                  {item.contentImages.split(',').filter((img: string) => img.trim() !== '').map((img: string, i: number) => (
+                  {item.contentImages.split(item.contentImages.includes('||') ? '||' : ',').filter((img: string) => img.trim() !== '').map((img: string, i: number) => (
                     <div key={i} className="w-full rounded-2xl overflow-hidden shadow-lg border-2 border-primary/10">
                       <img 
                         src={img.trim()} 
@@ -219,7 +219,7 @@ const DynamicPage: React.FC = () => {
               {item.pdfUrl && (
                 <div className="mt-12 space-y-6">
                   <h3 className="font-heading text-2xl font-bold text-primary border-b pb-4">ملفات المرفقات (PDF)</h3>
-                  {item.pdfUrl.split(',').filter((pdf: string) => pdf.trim() !== '').map((pdf: string, i: number) => {
+                  {item.pdfUrl.split(item.pdfUrl.includes('||') ? '||' : ',').filter((pdf: string) => pdf.trim() !== '').map((pdf: string, i: number) => {
                     const trimmedPdf = pdf.trim();
                     return (
                       <div key={i} className="space-y-4 mb-8">
@@ -247,7 +247,7 @@ const DynamicPage: React.FC = () => {
                 <div className="mt-12 space-y-6">
                   <h3 className="font-heading text-2xl font-bold text-primary border-b pb-4">مقاطع الفيديو</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {item.videoUrl.split(',').filter((vid: string) => vid.trim() !== '').map((vid: string, i: number) => {
+                    {item.videoUrl.split(item.videoUrl.includes('||') ? '||' : ',').filter((vid: string) => vid.trim() !== '').map((vid: string, i: number) => {
                       const trimmedVid = vid.trim();
                       return (
                         <div key={i} className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 bg-black">
@@ -269,7 +269,7 @@ const DynamicPage: React.FC = () => {
                 <div className="mt-12 space-y-6 bg-primary/5 p-8 rounded-3xl border border-primary/10">
                   <h3 className="font-heading text-2xl font-bold text-primary mb-4">روابط ومراجع إضافية</h3>
                   <div className="flex flex-wrap gap-4">
-                    {item.externalLinks.split(',').filter((l: string) => l.trim() !== '').map((link: string, i: number) => {
+                    {item.externalLinks.split(item.externalLinks.includes('||') ? '||' : ',').filter((l: string) => l.trim() !== '').map((link: string, i: number) => {
                       const parts = link.trim().split('::');
                       const url = parts[0];
                       const title = parts[1];
