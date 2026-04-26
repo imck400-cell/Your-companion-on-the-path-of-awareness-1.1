@@ -15,6 +15,27 @@ import { compressImage, getBase64Size } from '@/lib/imageUtils';
 
 import { handleFirestoreError, OperationType } from '@/lib/firestoreErrorHandler';
 
+const parseLinks = (val: string) => {
+  if (!val) return [];
+  if (val.includes('||')) return val.split('||').filter((l: string) => l.trim().length > 0);
+  if (val.includes('data:image/')) {
+    const urls = [];
+    const parts = val.split(',');
+    let i = 0;
+    while (i < parts.length) {
+      if (parts[i].startsWith('data:image/') && parts[i+1]) {
+        urls.push(parts[i] + ',' + parts[i+1]);
+        i += 2;
+      } else {
+        urls.push(parts[i]);
+        i++;
+      }
+    }
+    return urls.filter(l => l.trim().length > 0);
+  }
+  return val.split(',').filter((l: string) => l.trim().length > 0);
+};
+
 const DynamicPage: React.FC = () => {
   const { slug, itemId } = useParams<{ slug: string; itemId?: string }>();
   const { isSuperAdmin, profile } = useAuth();
@@ -200,9 +221,9 @@ const DynamicPage: React.FC = () => {
               </div>
               
               {/* Content Images */}
-              {item.contentImages && (
+              {typeof item.contentImages === 'string' && item.contentImages.trim() !== '' && (
                 <div className="mt-8 space-y-6">
-                  {item.contentImages.split(item.contentImages.includes('||') ? '||' : ',').filter((img: string) => img.trim() !== '').map((img: string, i: number) => (
+                  {parseLinks(item.contentImages).map((img: string, i: number) => (
                     <div key={i} className="w-full rounded-2xl overflow-hidden shadow-lg border-2 border-primary/10">
                       <img 
                         src={img.trim()} 
@@ -216,10 +237,10 @@ const DynamicPage: React.FC = () => {
               )}
               
               {/* Media Enclosures */}
-              {item.pdfUrl && (
+              {typeof item.pdfUrl === 'string' && item.pdfUrl.trim() !== '' && (
                 <div className="mt-12 space-y-6">
                   <h3 className="font-heading text-2xl font-bold text-primary border-b pb-4">ملفات المرفقات (PDF)</h3>
-                  {item.pdfUrl.split(item.pdfUrl.includes('||') ? '||' : ',').filter((pdf: string) => pdf.trim() !== '').map((pdf: string, i: number) => {
+                  {parseLinks(item.pdfUrl).map((pdf: string, i: number) => {
                     const trimmedPdf = pdf.trim();
                     return (
                       <div key={i} className="space-y-4 mb-8">
@@ -243,11 +264,11 @@ const DynamicPage: React.FC = () => {
                 </div>
               )}
 
-              {item.videoUrl && (
+              {typeof item.videoUrl === 'string' && item.videoUrl.trim() !== '' && (
                 <div className="mt-12 space-y-6">
                   <h3 className="font-heading text-2xl font-bold text-primary border-b pb-4">مقاطع الفيديو</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {item.videoUrl.split(item.videoUrl.includes('||') ? '||' : ',').filter((vid: string) => vid.trim() !== '').map((vid: string, i: number) => {
+                    {parseLinks(item.videoUrl).map((vid: string, i: number) => {
                       const trimmedVid = vid.trim();
                       return (
                         <div key={i} className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 bg-black">
@@ -265,11 +286,11 @@ const DynamicPage: React.FC = () => {
                 </div>
               )}
 
-              {item.externalLinks && (
+              {typeof item.externalLinks === 'string' && item.externalLinks.trim() !== '' && (
                 <div className="mt-12 space-y-6 bg-primary/5 p-8 rounded-3xl border border-primary/10">
                   <h3 className="font-heading text-2xl font-bold text-primary mb-4">روابط ومراجع إضافية</h3>
                   <div className="flex flex-wrap gap-4">
-                    {item.externalLinks.split(item.externalLinks.includes('||') ? '||' : ',').filter((l: string) => l.trim() !== '').map((link: string, i: number) => {
+                    {parseLinks(item.externalLinks).map((link: string, i: number) => {
                       const parts = link.trim().split('::');
                       const url = parts[0];
                       const title = parts[1];
@@ -385,9 +406,9 @@ const DynamicPage: React.FC = () => {
                     return (
                       <motion.div
                         key={item.id}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
+                        transition={{ duration: 0.3 }}
                         onClick={() => navigate(`/p/${slug}/${item.id}`)}
                       >
                         <Card className={`h-full hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] transition-all duration-500 cursor-pointer group border-4 md:border-[12px] border-white/90 glass-card overflow-hidden flex flex-col rounded-2xl md:rounded-[3.5rem] shadow-xl relative p-0 py-0 ring-0 ${color.bg} ${color.shadow}`}>
@@ -456,9 +477,9 @@ const DynamicPage: React.FC = () => {
             return (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ duration: 0.3 }}
                 onClick={() => navigate(`/p/${slug}/${item.id}`)}
               >
                 <Card className={`h-full hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] transition-all duration-500 cursor-pointer group border-4 md:border-[12px] border-white/90 glass-card overflow-hidden flex flex-col rounded-2xl md:rounded-[3.5rem] shadow-xl relative p-0 py-0 ring-0 ${color.bg} ${color.shadow}`}>

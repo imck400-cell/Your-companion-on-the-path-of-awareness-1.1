@@ -304,9 +304,9 @@ const Home: React.FC = () => {
                 return (
                   <motion.div
                     key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: itemIndex * 0.03 }}
+                    transition={{ duration: 0.2 }}
                     onClick={() => navigate(`/p/${selectedHub.slug}/${item.id}`)}
                   >
                     <Card className={`hover:shadow-xl transition-all cursor-pointer group h-full border-2 ${color.border} ${color.bg} ${color.shadow} glass-card rounded-2xl overflow-hidden relative p-0 py-0 ring-0 shadow-none flex flex-col`}>
@@ -426,7 +426,7 @@ const Home: React.FC = () => {
                 initial={{ opacity: 0, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
+                transition={{ duration: 0.3 }}
                 className="flex gap-4 group"
               >
                 <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-sm border flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
@@ -484,7 +484,7 @@ const Home: React.FC = () => {
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
+                transition={{ duration: 0.3 }}
                 onClick={() => setSelectedHubId(item.slug)}
                 className="flex gap-4 group lg:flex-row-reverse cursor-pointer"
               >
@@ -521,7 +521,7 @@ const Home: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
+                  transition={{ duration: 0.3 }}
                   onClick={() => setSelectedHubId(path.slug)}
                   className={`${path.color} rounded-3xl p-6 text-white relative overflow-hidden group cursor-pointer hover:shadow-xl transition-all h-full flex flex-col`}
                 >

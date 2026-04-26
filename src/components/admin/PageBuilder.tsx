@@ -16,8 +16,29 @@ interface PageBuilderProps {
   onCancel: () => void;
 }
 
+const parseLinks = (val: string) => {
+  if (!val) return [];
+  if (val.includes('||')) return val.split('||').filter((l: string) => l.trim().length > 0);
+  if (val.includes('data:image/')) {
+    const urls = [];
+    const parts = val.split(',');
+    let i = 0;
+    while (i < parts.length) {
+      if (parts[i].startsWith('data:image/') && parts[i+1]) {
+        urls.push(parts[i] + ',' + parts[i+1]);
+        i += 2;
+      } else {
+        urls.push(parts[i]);
+        i++;
+      }
+    }
+    return urls.filter(l => l.trim().length > 0);
+  }
+  return val.split(',').filter((l: string) => l.trim().length > 0);
+};
+
 const MultiLinkInput = ({ value, onChange, label, placeholder, icon: Icon, extraAction }: any) => {
-  const links = (value || '').split(value?.includes('||') ? '||' : ',').filter((l: string) => l.trim().length > 0);
+  const links = parseLinks(value || '');
   const [newLink, setNewLink] = useState('');
 
   const handleAdd = () => {
@@ -74,7 +95,7 @@ const MultiLinkInput = ({ value, onChange, label, placeholder, icon: Icon, extra
 };
 
 const MultiLinkWithTitleInput = ({ value, onChange, label, icon: Icon }: any) => {
-  const links = (value || '').split(value?.includes('||') ? '||' : ',').filter((l: string) => l.trim().length > 0);
+  const links = parseLinks(value || '');
   const [newUrl, setNewUrl] = useState('');
   const [newTitle, setNewTitle] = useState('');
 
@@ -569,7 +590,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ page, onSave, onCancel
                                 for (const file of files) {
                                   newImages.push(await compressImage(file));
                                 }
-                                onChange([...links, ...newImages].join(','));
+                                onChange([...links, ...newImages].join('||'));
                                 toast.success('تم رفع الصور الإضافية بنجاح');
                               } catch (error) {
                                 console.error('Images upload error:', error);
