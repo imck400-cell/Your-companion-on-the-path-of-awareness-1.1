@@ -48,13 +48,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(user);
         if (user) {
           const docRef = doc(db, 'users', user.uid);
-          const docSnap = await getDoc(docRef);
           
-          if (docSnap.exists()) {
-            setProfile(docSnap.data());
-          } else {
-            // Create default profile
-            const newProfile = {
+          try {
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+              setProfile(docSnap.data());
+            } else {
+              // Create default profile
+              const newProfile = {
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName,
+                photoURL: user.photoURL,
+                role: user.email === 'imck400@gmail.com' ? 'super_admin' : 'user',
+                permissions: user.email === 'imck400@gmail.com' ? ['all'] : [],
+                expiryDate: null,
+                createdAt: new Date().toISOString()
+              };
+              await setDoc(docRef, newProfile);
+              setProfile(newProfile);
+            }
+          } catch (docError) {
+            console.error('Error fetching/creating profile (possibly quota exceeded), using fallback profile:', docError);
+            setProfile({
               uid: user.uid,
               email: user.email,
               displayName: user.displayName,
@@ -63,9 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               permissions: user.email === 'imck400@gmail.com' ? ['all'] : [],
               expiryDate: null,
               createdAt: new Date().toISOString()
-            };
-            await setDoc(docRef, newProfile);
-            setProfile(newProfile);
+            });
           }
         } else {
           setProfile(null);
