@@ -1,5 +1,7 @@
 import { auth } from './firebase';
 
+import { toast } from 'sonner';
+
 export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',
@@ -29,8 +31,10 @@ export interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errorMessage,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -47,6 +51,17 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
+
   console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+
+  if (errorMessage.includes('Quota limit exceeded') || errorMessage.includes('resource-exhausted') || errorMessage.includes('quota')) {
+    console.error('Action blocked: Quota exceeded.');
+    toast.error('تم تجاوز الحد المسموح به للاستخدام المجاني لقاعدة البيانات (Quota Exceeded). يرجى المحاولة يوم غد.', { duration: 10000 });
+    return;
+  }
+
+  // Only throw explicitly for "Missing or insufficient permissions" so we don't crash firebase internals
+  if (errorMessage.includes('Missing or insufficient permissions') || errorMessage.includes('permission-denied')) {
+    throw new Error(JSON.stringify(errInfo));
+  }
 }

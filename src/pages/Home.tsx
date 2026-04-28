@@ -33,16 +33,24 @@ const Home: React.FC = () => {
 
     const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        setHubs(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+      try {
+        if (!snapshot.empty) {
+          setHubs(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+        }
+      } catch (error) {
+        console.error("Error mapping hubs:", error);
       }
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'pages');
     });
 
     const settingsUnsubscribe = onSnapshot(doc(db, 'site_settings', 'home_page'), (docSnap) => {
-      if (docSnap.exists()) {
-        setSiteSettings(docSnap.data());
+      try {
+        if (docSnap.exists()) {
+          setSiteSettings(docSnap.data());
+        }
+      } catch (e) {
+        console.error("Error setting site settings", e);
       }
       setLoading(false);
     }, (error) => {
@@ -511,8 +519,8 @@ const Home: React.FC = () => {
 
           {/* Cards */}
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-            {PATHS.map((path, i) => {
-              const hubForPath = hubs.find(h => h.slug === path.slug);
+            {PATHS?.map((path, i) => {
+              const hubForPath = hubs?.find(h => h?.slug === path?.slug);
               const displayImage = hubForPath?.image;
               
               return (
@@ -522,8 +530,8 @@ const Home: React.FC = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.3 }}
-                  onClick={() => setSelectedHubId(path.slug)}
-                  className={`${path.color} rounded-3xl p-6 text-white relative overflow-hidden group cursor-pointer hover:shadow-xl transition-all h-full flex flex-col`}
+                  onClick={() => setSelectedHubId(path?.slug)}
+                  className={`${path?.color} rounded-3xl p-6 text-white relative overflow-hidden group cursor-pointer hover:shadow-xl transition-all h-full flex flex-col`}
                 >
                   {hasFullPermissions && hubForPath && (
                     <Button
@@ -532,7 +540,7 @@ const Home: React.FC = () => {
                       className="absolute top-4 right-4 z-20 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleImageUpload(hubForPath.id);
+                        handleImageUpload(hubForPath?.id);
                       }}
                     >
                       <Icons.Camera className="h-4 w-4" />
@@ -545,10 +553,10 @@ const Home: React.FC = () => {
                       {displayImage ? (
                         <img src={displayImage} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        renderIcon(path.icon, "h-6 w-6")
+                        renderIcon(path?.icon, "h-6 w-6")
                       )}
                     </div>
-                    <h3 className="text-2xl font-heading font-bold">{path.title}</h3>
+                    <h3 className="text-2xl font-heading font-bold">{path?.title}</h3>
                   </div>
 
                   <div className="space-y-4 mt-auto">
@@ -556,13 +564,13 @@ const Home: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-0.5 bg-white/20 rounded text-[10px] font-bold uppercase tracking-wider">أبرز الخدمات</span>
                       </div>
-                      <p className="text-lg font-medium whitespace-normal break-words h-auto">{path.services}</p>
+                      <p className="text-lg font-medium whitespace-normal break-words h-auto">{path?.services}</p>
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-0.5 bg-white/20 rounded text-[10px] font-bold uppercase tracking-wider">الهدف الرئيسي</span>
                       </div>
-                      <p className="text-sm opacity-90 whitespace-normal break-words h-auto">{path.goal}</p>
+                      <p className="text-sm opacity-90 whitespace-normal break-words h-auto">{path?.goal}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -574,7 +582,7 @@ const Home: React.FC = () => {
 
       {/* Footer-like Hubs (Optional, keeping them accessible) */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 pt-12">
-        {hubs.map((hub, index) => {
+        {hubs?.map((hub, index) => {
           const colors = [
             'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 border-blue-200',
             'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-200',
@@ -587,16 +595,16 @@ const Home: React.FC = () => {
           
           return (
             <Button 
-              key={hub.id} 
+              key={hub?.id || index} 
               variant="ghost" 
               size="sm"
-              onClick={() => setSelectedHubId(hub.id)}
+              onClick={() => setSelectedHubId(hub?.id)}
               className={`rounded-2xl h-auto min-h-max p-3 sm:p-4 flex flex-col gap-2 border transition-all ${colorClass} whitespace-normal text-wrap break-words`}
               style={{ wordWrap: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' }}
             >
-              <div className="shrink-0">{renderIcon(hub.icon, "h-6 w-6")}</div>
+              <div className="shrink-0">{renderIcon(hub?.icon, "h-6 w-6")}</div>
               <span className="text-[11px] sm:text-xs font-bold w-full text-center leading-snug shrink whitespace-pre-wrap max-w-full break-words break-all sm:break-normal line-clamp-3">
-                {hub.title?.[lang] || hub.title?.ar}
+                {hub?.title?.[lang] || hub?.title?.ar || 'بدون عنوان'}
               </span>
             </Button>
           );

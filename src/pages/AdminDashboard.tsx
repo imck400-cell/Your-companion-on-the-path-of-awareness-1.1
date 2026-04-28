@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LayoutDashboard, FileText, BarChart3, MessageSquare, Megaphone, Settings } from 'lucide-react';
-import { AnalyticsOverview } from '@/components/admin/AnalyticsOverview';
-import { PageManager } from '@/components/admin/PageManager';
-import { TicketSystem } from '@/components/admin/TicketSystem';
-import { AdEngine } from '@/components/admin/AdEngine';
-import { AccountManagement } from '@/components/admin/AccountManagement';
-import { HomeSettings } from '@/components/admin/HomeSettings';
+import { LayoutDashboard, FileText, BarChart3, MessageSquare, Megaphone, Settings, Target } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+const AnalyticsOverview = React.lazy(() => import('@/components/admin/AnalyticsOverview').then(module => ({ default: module.AnalyticsOverview })));
+const PageManager = React.lazy(() => import('@/components/admin/PageManager').then(module => ({ default: module.PageManager })));
+const TicketSystem = React.lazy(() => import('@/components/admin/TicketSystem').then(module => ({ default: module.TicketSystem })));
+const AdEngine = React.lazy(() => import('@/components/admin/AdEngine').then(module => ({ default: module.AdEngine })));
+const AccountManagement = React.lazy(() => import('@/components/admin/AccountManagement').then(module => ({ default: module.AccountManagement })));
+const HomeSettings = React.lazy(() => import('@/components/admin/HomeSettings').then(module => ({ default: module.HomeSettings })));
+
+const SuspenseLoader = () => (
+  <div className="flex flex-col items-center justify-center p-12 w-full min-h-[300px]">
+    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    <p className="mt-4 text-muted-foreground animate-pulse">جاري تحميل القسم...</p>
+  </div>
+);
 
 const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -116,74 +125,82 @@ const AdminDashboard: React.FC = () => {
         <TabsContent value="overview" className="w-full">
           {hasPermission('overview') ? (
             <TabContentWrapper>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-white/20 shadow-sm">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">{t('active_users')}</CardTitle>
-                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">1,284</div>
-                    <p className="text-xs text-muted-foreground">+12% من الشهر الماضي</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-white/20 shadow-sm">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">{t('total_views')}</CardTitle>
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">45,231</div>
-                    <p className="text-xs text-muted-foreground">+5% من الأسبوع الماضي</p>
-                  </CardContent>
-                </Card>
-              </div>
-              <div className="mt-6">
-                <AnalyticsOverview />
-              </div>
+              <ErrorBoundary>
+                <Suspense fallback={<SuspenseLoader />}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-white/20 shadow-sm">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">{t('active_users')}</CardTitle>
+                        <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">1,284</div>
+                        <p className="text-xs text-muted-foreground">+12% من الشهر الماضي</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-white/20 shadow-sm">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">{t('total_views')}</CardTitle>
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">45,231</div>
+                        <p className="text-xs text-muted-foreground">+5% من الأسبوع الماضي</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  <div className="mt-6">
+                    <AnalyticsOverview />
+                  </div>
+                </Suspense>
+              </ErrorBoundary>
             </TabContentWrapper>
           ) : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
         </TabsContent>
 
         <TabsContent value="pages" className="w-full">
-          {hasPermission('pages') ? <TabContentWrapper><PageManager /></TabContentWrapper> : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
+          {hasPermission('pages') ? <TabContentWrapper><ErrorBoundary><Suspense fallback={<SuspenseLoader />}><PageManager /></Suspense></ErrorBoundary></TabContentWrapper> : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
         </TabsContent>
 
         <TabsContent value="analytics" className="w-full">
-          {hasPermission('analytics') ? <TabContentWrapper><AnalyticsOverview full /></TabContentWrapper> : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
+          {hasPermission('analytics') ? <TabContentWrapper><ErrorBoundary><Suspense fallback={<SuspenseLoader />}><AnalyticsOverview full /></Suspense></ErrorBoundary></TabContentWrapper> : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
         </TabsContent>
 
         <TabsContent value="tickets" className="w-full">
-          {hasPermission('tickets') ? <TabContentWrapper><TicketSystem /></TabContentWrapper> : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
+          {hasPermission('tickets') ? <TabContentWrapper><ErrorBoundary><Suspense fallback={<SuspenseLoader />}><TicketSystem /></Suspense></ErrorBoundary></TabContentWrapper> : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
         </TabsContent>
 
         <TabsContent value="ads" className="w-full">
-          {hasPermission('ads') ? <TabContentWrapper><AdEngine /></TabContentWrapper> : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
+          {hasPermission('ads') ? <TabContentWrapper><ErrorBoundary><Suspense fallback={<SuspenseLoader />}><AdEngine /></Suspense></ErrorBoundary></TabContentWrapper> : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
         </TabsContent>
 
         <TabsContent value="home_settings" className="w-full">
-          {hasPermission('home_settings') ? <TabContentWrapper><HomeSettings /></TabContentWrapper> : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
+          {hasPermission('home_settings') ? <TabContentWrapper><ErrorBoundary><Suspense fallback={<SuspenseLoader />}><HomeSettings /></Suspense></ErrorBoundary></TabContentWrapper> : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
         </TabsContent>
 
         <TabsContent value="settings" className="w-full">
           {hasPermission('settings') ? (
             <TabContentWrapper>
-              <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-white/20 shadow-sm">
-                <CardHeader>
-                  <CardTitle>{t('settings')}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <h3 className="font-bold text-lg">إدارة الحساب والصلاحيات</h3>
-                    <p className="text-muted-foreground text-sm">تحكم في بياناتك الشخصية وصلاحيات الوصول للمديرين الآخرين.</p>
-                    <AccountManagement />
-                  </div>
-                  
-                  <div className="pt-6 border-t border-slate-200/50 dark:border-slate-700/50">
-                    <p className="text-muted-foreground">إعدادات المنصة العامة والاشتراكات</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <ErrorBoundary>
+                <Suspense fallback={<SuspenseLoader />}>
+                  <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-white/20 shadow-sm">
+                    <CardHeader>
+                      <CardTitle>{t('settings')}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-4">
+                        <h3 className="font-bold text-lg">إدارة الحساب والصلاحيات</h3>
+                        <p className="text-muted-foreground text-sm">تحكم في بياناتك الشخصية وصلاحيات الوصول للمديرين الآخرين.</p>
+                        <AccountManagement />
+                      </div>
+                      
+                      <div className="pt-6 border-t border-slate-200/50 dark:border-slate-700/50">
+                        <p className="text-muted-foreground">إعدادات المنصة العامة والاشتراكات</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Suspense>
+              </ErrorBoundary>
             </TabContentWrapper>
           ) : <div className="p-12 text-center text-muted-foreground">لا تملك صلاحية الوصول لهذه اللوحة</div>}
         </TabsContent>
