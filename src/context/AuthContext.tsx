@@ -70,7 +70,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setProfile(newProfile);
             }
           } catch (docError) {
-            console.error('Error fetching/creating profile (possibly quota exceeded), using fallback profile:', docError);
+            const docErrorString = String(docError);
+            if (!docErrorString.includes('Quota') && !docErrorString.includes('resource-exhausted')) {
+              console.error('Error fetching/creating profile (possibly quota exceeded), using fallback profile:', docError);
+            }
             setProfile({
               uid: user.uid,
               email: user.email,

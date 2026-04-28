@@ -33,6 +33,12 @@ export interface FirestoreErrorInfo {
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   const errorMessage = error instanceof Error ? error.message : String(error);
   
+  if (errorMessage.includes('Quota limit exceeded') || errorMessage.includes('resource-exhausted') || errorMessage.includes('quota')) {
+    // Only toast, no console.error to avoid polluting logs and triggering panic
+    toast.error('تم تجاوز الحد المسموح به للاستخدام المجاني لقاعدة البيانات (Quota Exceeded). يرجى المحاولة يوم غد.', { duration: 10000 });
+    return;
+  }
+  
   const errInfo: FirestoreErrorInfo = {
     error: errorMessage,
     authInfo: {
@@ -53,12 +59,6 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   };
 
   console.error('Firestore Error: ', JSON.stringify(errInfo));
-
-  if (errorMessage.includes('Quota limit exceeded') || errorMessage.includes('resource-exhausted') || errorMessage.includes('quota')) {
-    console.error('Action blocked: Quota exceeded.');
-    toast.error('تم تجاوز الحد المسموح به للاستخدام المجاني لقاعدة البيانات (Quota Exceeded). يرجى المحاولة يوم غد.', { duration: 10000 });
-    return;
-  }
 
   // Only throw explicitly for "Missing or insufficient permissions" so we don't crash firebase internals
   if (errorMessage.includes('Missing or insufficient permissions') || errorMessage.includes('permission-denied')) {

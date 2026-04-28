@@ -51,9 +51,10 @@ export const QuickNav: React.FC = () => {
           setHubs(fetchedHubs);
         }
       } catch (e) {
-        console.error("Error processing hubs in QuickNav:", e);
+        console.warn("Error processing hubs in QuickNav:", e);
       }
     }, (error) => {
+      if (String(error).includes('Quota') || String(error).includes('resource-exhausted')) return;
       console.error("Error fetching hubs for QuickNav:", error);
     });
 

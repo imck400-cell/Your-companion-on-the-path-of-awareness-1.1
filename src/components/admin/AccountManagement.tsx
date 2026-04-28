@@ -44,6 +44,8 @@ export const AccountManagement: React.FC = () => {
       const q = query(collection(db, 'users'), where('role', 'in', ['admin', 'super_admin']));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         setAdmins(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      }, (err) => {
+        // Ignored
       });
       return () => unsubscribe();
     }

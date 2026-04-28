@@ -15,6 +15,8 @@ export const AdEngine: React.FC = () => {
     const q = query(collection(db, 'ads'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setAds(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (err) => {
+      // Ignored
     });
     return () => unsubscribe();
   }, []);

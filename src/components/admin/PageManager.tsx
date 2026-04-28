@@ -20,6 +20,8 @@ export const PageManager: React.FC = () => {
     const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setPages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (err) => {
+      // Ignored
     });
     return () => unsubscribe();
   }, []);

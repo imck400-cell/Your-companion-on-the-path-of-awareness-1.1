@@ -16,6 +16,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         const data = snap.data();
         setAnnouncements(data?.announcements ?? null);
       }
+    }, (err) => {
+      // Ignored
     });
     return () => unsub();
   }, []);

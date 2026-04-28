@@ -36,6 +36,8 @@ export const AnalyticsOverview: React.FC<{ full?: boolean }> = ({ full }) => {
         clicks: events.filter(e => e.type === 'click').length,
         avgTime: '2:45' // Mocked for now
       });
+    }, (err) => {
+      // Ignored
     });
     return () => unsubscribe();
   }, []);

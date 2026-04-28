@@ -50,12 +50,13 @@ const Home: React.FC = () => {
           setSiteSettings(docSnap.data());
         }
       } catch (e) {
-        console.error("Error setting site settings", e);
+        console.warn("Error setting site settings", e);
       }
       setLoading(false);
     }, (error) => {
-      console.error('Site settings error:', error);
       setLoading(false);
+      if (String(error).includes('Quota') || String(error).includes('resource-exhausted')) return;
+      console.error('Site settings error:', error);
     });
 
     return () => {

@@ -14,6 +14,8 @@ export const TicketSystem: React.FC = () => {
     const q = query(collection(db, 'tickets'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setTickets(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (err) => {
+      // Ignored
     });
     return () => unsubscribe();
   }, []);
