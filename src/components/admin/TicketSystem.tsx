@@ -4,19 +4,36 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { collection, getDocs, query, orderBy, updateDoc, doc, deleteDoc, limit, startAfter } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { MessageSquare, Clock, AlertCircle, CheckCircle2, Trash2 } from 'lucide-react';
+import { MessageSquare, Clock, AlertCircle, CheckCircle2, Trash2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { getCache, setCache } from '@/lib/cache';
 
 export const TicketSystem: React.FC = () => {
   const [tickets, setTickets] = useState<any[]>([]);
   const [lastVisible, setLastVisible] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 20;
 
-  const fetchTickets = async (loadMore = false) => {
+  const fetchTickets = async (loadMore = false, forceRefresh = false) => {
     try {
-      setLoading(true);
+      if (forceRefresh) {
+        setIsRefreshing(true);
+      } else if (!loadMore) {
+        const cachedTickets = getCache('tickets_data');
+        if (cachedTickets) {
+          setTickets(cachedTickets);
+          const cachedHasMore = getCache('tickets_hasMore');
+          if (cachedHasMore !== null) setHasMore(cachedHasMore);
+          setLoading(false);
+          return;
+        }
+        setLoading(true);
+      } else {
+        setLoading(true);
+      }
+      
       let q = query(collection(db, 'tickets'), orderBy('createdAt', 'desc'), limit(PAGE_SIZE));
       
       if (loadMore && lastVisible) {
@@ -27,17 +44,23 @@ export const TicketSystem: React.FC = () => {
       const fetchedTickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
       if (loadMore) {
-        setTickets(prev => [...prev, ...fetchedTickets]);
+        const newData = [...tickets, ...fetchedTickets];
+        setTickets(newData);
+        setCache('tickets_data', newData);
       } else {
         setTickets(fetchedTickets);
+        setCache('tickets_data', fetchedTickets);
       }
 
       setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
-      setHasMore(snapshot.docs.length === PAGE_SIZE);
+      const moreAvailable = snapshot.docs.length === PAGE_SIZE;
+      setHasMore(moreAvailable);
+      setCache('tickets_hasMore', moreAvailable);
     } catch (error) {
       console.error("Error fetching tickets:", error);
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -48,7 +71,9 @@ export const TicketSystem: React.FC = () => {
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
       await updateDoc(doc(db, 'tickets', id), { status });
-      setTickets(prev => prev.map(t => t.id === id ? { ...t, status } : t));
+      const updatedTickets = tickets.map(t => t.id === id ? { ...t, status } : t);
+      setTickets(updatedTickets);
+      setCache('tickets_data', updatedTickets);
       toast.success('تم تحديث حالة التذكرة');
     } catch (error) {
       toast.error('حدث خطأ أثناء التحديث');
@@ -59,7 +84,9 @@ export const TicketSystem: React.FC = () => {
     if (confirm('هل أنت متأكد من حذف هذه التذكرة؟')) {
       try {
         await deleteDoc(doc(db, 'tickets', id));
-        setTickets(prev => prev.filter(t => t.id !== id));
+        const updatedTickets = tickets.filter(t => t.id !== id);
+        setTickets(updatedTickets);
+        setCache('tickets_data', updatedTickets);
         toast.success('تم حذف التذكرة');
       } catch (error) {
         toast.error('حدث خطأ أثناء الحذف');
@@ -76,6 +103,14 @@ export const TicketSystem: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">الدعم والتذاكر</h2>
+        <Button variant="outline" size="sm" onClick={() => fetchTickets(false, true)} disabled={isRefreshing || loading}>
+          <RefreshCw className={`w-4 h-4 ml-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          تحديث البيانات
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-primary/5">
           <CardContent className="p-4 flex items-center gap-4">

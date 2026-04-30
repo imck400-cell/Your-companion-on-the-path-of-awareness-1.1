@@ -12,6 +12,7 @@ import { Plus, Trash2, Camera, Save, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { compressImage, getBase64Size } from '@/lib/imageUtils';
 import { GoogleGenAI } from "@google/genai";
+import { getCache, setCache } from '@/lib/cache';
 
 export const HomeSettings: React.FC = () => {
   const [settings, setSettings] = useState<any>({
@@ -21,6 +22,7 @@ export const HomeSettings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [translating, setTranslating] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const translateText = async (text: string) => {
     if (!text || text.trim().length < 2) return "";
@@ -51,20 +53,36 @@ export const HomeSettings: React.FC = () => {
     setTranslating(null);
   };
 
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const docRef = doc(db, 'site_settings', 'home_page');
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setSettings(docSnap.data());
+  const fetchSettings = async (forceRefresh = false) => {
+    try {
+      if (forceRefresh) {
+        setIsRefreshing(true);
+      } else {
+        const cachedSettings = getCache('home_settings_data');
+        if (cachedSettings) {
+          setSettings(cachedSettings);
+          setLoading(false);
+          return;
         }
-      } catch (error) {
-        console.error('Error fetching settings:', error);
-      } finally {
-        setLoading(false);
+        setLoading(true);
       }
-    };
+
+      const docRef = doc(db, 'site_settings', 'home_page');
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setSettings(data);
+        setCache('home_settings_data', data);
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     fetchSettings();
   }, []);
 
@@ -76,6 +94,7 @@ export const HomeSettings: React.FC = () => {
         ...settings,
         updatedAt: serverTimestamp()
       });
+      setCache('home_settings_data', settings);
       toast.success('تم حفظ الإعدادات بنجاح');
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -232,7 +251,12 @@ export const HomeSettings: React.FC = () => {
           <IconWrapper colorClass="bg-primary/10 text-primary">
             <Icons.Settings className="h-6 w-6" />
           </IconWrapper>
-          <h2 className="text-2xl font-bold">إعدادات الصفحة الرئيسية</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold">إعدادات الصفحة الرئيسية</h2>
+            <Button variant="ghost" size="icon" onClick={() => fetchSettings(true)} disabled={isRefreshing || loading} className="h-8 w-8 ml-2 text-muted-foreground hover:text-foreground">
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <Button 

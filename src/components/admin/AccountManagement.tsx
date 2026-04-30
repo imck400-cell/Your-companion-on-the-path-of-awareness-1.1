@@ -15,7 +15,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
-import { UserCog, Plus, Trash2, Shield, Calendar } from 'lucide-react';
+import { UserCog, Plus, Trash2, Shield, Calendar, RefreshCw } from 'lucide-react';
+import { getCache, setCache } from '@/lib/cache';
 
 const FEATURES = [
   { id: 'overview', label: 'لوحة القيادة' },
@@ -33,6 +34,7 @@ export const AccountManagement: React.FC = () => {
   const [admins, setAdmins] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loadingAdmins, setLoadingAdmins] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newAdmin, setNewAdmin] = useState({
     email: '',
@@ -41,17 +43,31 @@ export const AccountManagement: React.FC = () => {
     expiryDate: '',
   });
 
-  const fetchAdmins = async () => {
+  const fetchAdmins = async (forceRefresh = false) => {
     if (!isSuperAdmin) return;
     try {
-      setLoadingAdmins(true);
+      if (forceRefresh) {
+        setIsRefreshing(true);
+      } else {
+        const cachedAdmins = getCache('admins_data');
+        if (cachedAdmins) {
+          setAdmins(cachedAdmins);
+          setLoadingAdmins(false);
+          return;
+        }
+        setLoadingAdmins(true);
+      }
+
       const q = query(collection(db, 'users'), where('role', 'in', ['admin', 'super_admin']));
       const snapshot = await getDocs(q);
-      setAdmins(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const fetchedAdmins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setAdmins(fetchedAdmins);
+      setCache('admins_data', fetchedAdmins);
     } catch (error) {
       console.error("Error fetching admins:", error);
     } finally {
       setLoadingAdmins(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -161,7 +177,12 @@ export const AccountManagement: React.FC = () => {
             {isSuperAdmin && (
               <div className="space-y-4 pt-4 border-t">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-bold">إدارة المديرين</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold">إدارة المديرين</h3>
+                    <Button variant="ghost" size="icon" onClick={() => fetchAdmins(true)} disabled={isRefreshing || loadingAdmins} className="h-6 w-6">
+                      <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    </Button>
+                  </div>
                   <Button size="sm" onClick={() => setIsAddModalOpen(true)} className="gap-1">
                     <Plus className="h-4 w-4" />
                     إضافة مدير جديد

@@ -3,11 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Edit2, Trash2, Move, FileText } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Move, FileText, RefreshCw } from 'lucide-react';
 import { collection, getDocs, query, orderBy, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { PageBuilder } from './PageBuilder';
 import { toast } from 'sonner';
+import { getCache, setCache } from '@/lib/cache';
 
 export const PageManager: React.FC = () => {
   const { t } = useTranslation();
@@ -16,20 +17,36 @@ export const PageManager: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingPage, setEditingPage] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchPages = async (forceRefresh = false) => {
+    try {
+      if (forceRefresh) {
+        setIsRefreshing(true);
+      } else {
+        const cachedPages = getCache('pages_data');
+        if (cachedPages) {
+          setPages(cachedPages);
+          setLoading(false);
+          return;
+        }
+        setLoading(true);
+      }
+      
+      const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
+      const snapshot = await getDocs(q);
+      const fetchedPages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setPages(fetchedPages);
+      setCache('pages_data', fetchedPages);
+    } catch (error) {
+      console.error("Error fetching pages:", error);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPages = async () => {
-      try {
-        setLoading(true);
-        const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
-        const snapshot = await getDocs(q);
-        setPages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      } catch (error) {
-        console.error("Error fetching pages:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchPages();
   }, []);
 
@@ -47,7 +64,9 @@ export const PageManager: React.FC = () => {
           ...data,
           updatedAt: serverTimestamp()
         });
-        setPages(prev => prev.map(p => p.id === editingPage.id ? { ...p, ...data } : p));
+        const newPages = pages.map(p => p.id === editingPage.id ? { ...p, ...data } : p);
+        setPages(newPages);
+        setCache('pages_data', newPages);
         toast.success('تم تحديث الصفحة بنجاح');
       } else {
         const docRef = await addDoc(collection(db, 'pages'), {
@@ -56,7 +75,9 @@ export const PageManager: React.FC = () => {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
-        setPages(prev => [...prev, { id: docRef.id, ...data }]);
+        const newPages = [...pages, { id: docRef.id, ...data }];
+        setPages(newPages);
+        setCache('pages_data', newPages);
         toast.success('تم إنشاء الصفحة بنجاح');
       }
       setIsEditing(false);
@@ -75,7 +96,9 @@ export const PageManager: React.FC = () => {
     if (confirm('هل أنت متأكد من حذف هذه الصفحة؟')) {
       try {
         await deleteDoc(doc(db, 'pages', id));
-        setPages(prev => prev.filter(p => p.id !== id));
+        const newPages = pages.filter(p => p.id !== id);
+        setPages(newPages);
+        setCache('pages_data', newPages);
         toast.success('تم حذف الصفحة بنجاح');
       } catch (error) {
         toast.error('حدث خطأ أثناء حذف الصفحة');
@@ -103,6 +126,13 @@ export const PageManager: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">إدارة المحتوى</h2>
+        <Button variant="outline" size="sm" onClick={() => fetchPages(true)} disabled={isRefreshing || loading}>
+          <RefreshCw className={`w-4 h-4 ml-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          تحديث البيانات
+        </Button>
+      </div>
       <div className="flex items-center justify-between gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

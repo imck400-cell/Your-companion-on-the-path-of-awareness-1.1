@@ -3,11 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Users, Eye, MousePointer2, Clock } from 'lucide-react';
+import { Users, Eye, MousePointer2, Clock, RefreshCw } from 'lucide-react';
+import { getCache, setCache } from '@/lib/cache';
+import { Button } from '@/components/ui/button';
 
 export const AnalyticsOverview: React.FC<{ full?: boolean }> = ({ full }) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [stats, setStats] = useState({
     views: 0,
     uniqueUsers: 0,
@@ -15,43 +18,70 @@ export const AnalyticsOverview: React.FC<{ full?: boolean }> = ({ full }) => {
     avgTime: '0:00'
   });
 
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
+  const fetchAnalytics = async (forceRefresh = false) => {
+    try {
+      if (forceRefresh) {
+        setIsRefreshing(true);
+      } else {
+        const cachedData = getCache('analytics_data');
+        const cachedStats = getCache('analytics_stats');
+        if (cachedData && cachedStats) {
+          setData(cachedData);
+          setStats(cachedStats);
+          setLoading(false);
+          return;
+        }
         setLoading(true);
-        const q = query(collection(db, 'analytics'), orderBy('timestamp', 'desc'), limit(100));
-        const snapshot = await getDocs(q);
-        const events = snapshot.docs.map(doc => doc.data());
-        
-        // Group by day for chart
-        const grouped = events.reduce((acc: any, event: any) => {
-          const date = event.timestamp ? new Date(event.timestamp.toDate()).toLocaleDateString('ar-EG') : 'N/A';
-          acc[date] = (acc[date] || 0) + 1;
-          return acc;
-        }, {});
-
-        const chartData = Object.entries(grouped).map(([name, value]) => ({ name, value })).reverse();
-        setData(chartData);
-
-        // Simple stats
-        setStats({
-          views: events.filter(e => e.type === 'page_view').length,
-          uniqueUsers: new Set(events.map(e => e.userId)).size,
-          clicks: events.filter(e => e.type === 'click').length,
-          avgTime: '2:45' // Mocked for now
-        });
-      } catch (error) {
-        console.error("Error fetching analytics:", error);
-      } finally {
-        setLoading(false);
       }
-    };
+      
+      const q = query(collection(db, 'analytics'), orderBy('timestamp', 'desc'), limit(100));
+      const snapshot = await getDocs(q);
+      const events = snapshot.docs.map(doc => doc.data());
+      
+      // Group by day for chart
+      const grouped = events.reduce((acc: any, event: any) => {
+        const date = event.timestamp ? new Date(event.timestamp.toDate()).toLocaleDateString('ar-EG') : 'N/A';
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+      }, {});
 
+      const chartData = Object.entries(grouped).map(([name, value]) => ({ name, value })).reverse();
+      
+      // Simple stats
+      const newStats = {
+        views: events.filter(e => e.type === 'page_view').length,
+        uniqueUsers: new Set(events.map(e => e.userId)).size,
+        clicks: events.filter(e => e.type === 'click').length,
+        avgTime: '2:45' // Mocked for now
+      };
+
+      setData(chartData);
+      setStats(newStats);
+      
+      setCache('analytics_data', chartData);
+      setCache('analytics_stats', newStats);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAnalytics();
   }, []);
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">التقارير والإحصائيات</h2>
+        <Button variant="outline" size="sm" onClick={() => fetchAnalytics(true)} disabled={isRefreshing || loading}>
+          <RefreshCw className={`w-4 h-4 ml-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          تحديث البيانات
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">

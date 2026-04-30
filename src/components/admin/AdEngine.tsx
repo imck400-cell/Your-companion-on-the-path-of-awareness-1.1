@@ -4,19 +4,36 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { collection, getDocs, query, orderBy, limit, startAfter, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Megaphone, Plus, Trash2, ExternalLink } from 'lucide-react';
+import { Megaphone, Plus, Trash2, ExternalLink, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { getCache, setCache } from '@/lib/cache';
 
 export const AdEngine: React.FC = () => {
   const [ads, setAds] = useState<any[]>([]);
   const [newAd, setNewAd] = useState({ title: '', link: '', imageUrl: '' });
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastVisible, setLastVisible] = useState<any>(null);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchAds = async (loadMore = false) => {
+  const fetchAds = async (loadMore = false, forceRefresh = false) => {
     try {
-      setLoading(true);
+      if (forceRefresh) {
+        setIsRefreshing(true);
+      } else if (!loadMore) {
+        const cachedAds = getCache('ads_data');
+        if (cachedAds) {
+          setAds(cachedAds);
+          const cachedHasMore = getCache('ads_hasMore');
+          if (cachedHasMore !== null) setHasMore(cachedHasMore);
+          setLoading(false);
+          return;
+        }
+        setLoading(true);
+      } else {
+        setLoading(true);
+      }
+
       let q = query(
         collection(db, 'ads'),
         orderBy('createdAt', 'desc'),
@@ -36,17 +53,23 @@ export const AdEngine: React.FC = () => {
       const newAds = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
       if (loadMore) {
-        setAds(prev => [...prev, ...newAds]);
+        const appendedAds = [...ads, ...newAds];
+        setAds(appendedAds);
+        setCache('ads_data', appendedAds);
       } else {
         setAds(newAds);
+        setCache('ads_data', newAds);
       }
 
       setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
-      setHasMore(snapshot.docs.length === 20);
+      const moreAvailable = snapshot.docs.length === 20;
+      setHasMore(moreAvailable);
+      setCache('ads_hasMore', moreAvailable);
     } catch (error) {
       console.error("Error fetching ads:", error);
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -65,7 +88,9 @@ export const AdEngine: React.FC = () => {
         ...newAd,
         createdAt: serverTimestamp()
       });
-      setAds(prev => [{ id: docRef.id, ...newAd, createdAt: new Date() }, ...prev]);
+      const updatedAds = [{ id: docRef.id, ...newAd, createdAt: new Date() }, ...ads];
+      setAds(updatedAds);
+      setCache('ads_data', updatedAds);
       setNewAd({ title: '', link: '', imageUrl: '' });
       toast.success('تم إضافة الإعلان بنجاح');
     } catch (error) {
@@ -76,7 +101,9 @@ export const AdEngine: React.FC = () => {
   const handleDeleteAd = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'ads', id));
-      setAds(prev => prev.filter(ad => ad.id !== id));
+      const updatedAds = ads.filter(ad => ad.id !== id);
+      setAds(updatedAds);
+      setCache('ads_data', updatedAds);
       toast.success('تم حذف الإعلان');
     } catch (error) {
       toast.error('حدث خطأ أثناء الحذف');
@@ -85,6 +112,13 @@ export const AdEngine: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">إدارة الإعلانات</h2>
+        <Button variant="outline" size="sm" onClick={() => fetchAds(false, true)} disabled={isRefreshing || loading}>
+          <RefreshCw className={`w-4 h-4 ml-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          تحديث البيانات
+        </Button>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
