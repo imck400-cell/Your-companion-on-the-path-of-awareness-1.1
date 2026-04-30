@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { collection, query, where, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { UserCog, Plus, Trash2, Shield, Calendar } from 'lucide-react';
@@ -31,6 +31,8 @@ export const AccountManagement: React.FC = () => {
   const { t } = useTranslation();
   const { user, profile, isSuperAdmin } = useAuth();
   const [admins, setAdmins] = useState<any[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loadingAdmins, setLoadingAdmins] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newAdmin, setNewAdmin] = useState({
     email: '',
@@ -39,17 +41,25 @@ export const AccountManagement: React.FC = () => {
     expiryDate: '',
   });
 
-  useEffect(() => {
-    if (isSuperAdmin) {
+  const fetchAdmins = async () => {
+    if (!isSuperAdmin) return;
+    try {
+      setLoadingAdmins(true);
       const q = query(collection(db, 'users'), where('role', 'in', ['admin', 'super_admin']));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        setAdmins(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      }, (err) => {
-        // Ignored
-      });
-      return () => unsubscribe();
+      const snapshot = await getDocs(q);
+      setAdmins(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch (error) {
+      console.error("Error fetching admins:", error);
+    } finally {
+      setLoadingAdmins(false);
     }
-  }, [isSuperAdmin]);
+  };
+
+  useEffect(() => {
+    if (isOpen && isSuperAdmin && admins.length === 0) {
+      fetchAdmins();
+    }
+  }, [isOpen, isSuperAdmin]);
 
   const handleTogglePermission = (featureId: string) => {
     setNewAdmin(prev => ({
@@ -87,7 +97,7 @@ export const AccountManagement: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <Dialog>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger render={
           <Button variant="outline" className="w-full gap-2">
             <UserCog className="h-4 w-4" />
@@ -159,22 +169,30 @@ export const AccountManagement: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  {admins.filter(a => a.id !== user?.uid).map(admin => (
-                    <div key={admin.id} className="flex items-center justify-between p-3 border rounded-lg bg-card">
-                      <div>
-                        <p className="font-bold">{admin.displayName}</p>
-                        <p className="text-xs text-muted-foreground">{admin.email}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{admin.role}</Badge>
-                        <Button variant="ghost" size="icon" className="text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                  {loadingAdmins ? (
+                    <div className="flex justify-center py-4">
+                      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                     </div>
-                  ))}
-                  {admins.length <= 1 && (
-                    <p className="text-center text-sm text-muted-foreground py-4">لا يوجد مديرون آخرون حالياً</p>
+                  ) : (
+                    <>
+                      {admins.filter(a => a.id !== user?.uid).map(admin => (
+                        <div key={admin.id} className="flex items-center justify-between p-3 border rounded-lg bg-card">
+                          <div>
+                            <p className="font-bold">{admin.displayName}</p>
+                            <p className="text-xs text-muted-foreground">{admin.email}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">{admin.role}</Badge>
+                            <Button variant="ghost" size="icon" className="text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      {admins.length <= 1 && (
+                        <p className="text-center text-sm text-muted-foreground py-4">لا يوجد مديرون آخرون حالياً</p>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

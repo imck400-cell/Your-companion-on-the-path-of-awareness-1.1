@@ -29,40 +29,33 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     trackEvent('page_view', { page: 'home' });
-    // removed auto-seed logic to prevent overwriting user-modified data on reload
 
-    const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchHomeData = async () => {
       try {
+        const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
+        const snapshot = await getDocs(q);
         if (!snapshot.empty) {
           setHubs(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
         }
       } catch (error) {
-        console.error("Error mapping hubs:", error);
+        handleFirestoreError(error, OperationType.GET, 'pages');
       }
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'pages');
-    });
 
-    const settingsUnsubscribe = onSnapshot(doc(db, 'site_settings', 'home_page'), (docSnap) => {
       try {
+        const docSnap = await getDoc(doc(db, 'site_settings', 'home_page'));
         if (docSnap.exists()) {
           setSiteSettings(docSnap.data());
         }
-      } catch (e) {
-        console.warn("Error setting site settings", e);
+      } catch (error) {
+        if (!String(error).includes('Quota') && !String(error).includes('resource-exhausted')) {
+          console.error('Site settings error:', error);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }, (error) => {
-      setLoading(false);
-      if (String(error).includes('Quota') || String(error).includes('resource-exhausted')) return;
-      console.error('Site settings error:', error);
-    });
-
-    return () => {
-      unsubscribe();
-      settingsUnsubscribe();
     };
+
+    fetchHomeData();
   }, []);
 
   const lang = i18n.language.startsWith('ar') ? 'ar' : 'en';

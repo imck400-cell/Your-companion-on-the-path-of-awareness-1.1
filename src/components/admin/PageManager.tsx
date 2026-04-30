@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Edit2, Trash2, Move, FileText } from 'lucide-react';
-import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { PageBuilder } from './PageBuilder';
 import { toast } from 'sonner';
@@ -15,15 +15,22 @@ export const PageManager: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editingPage, setEditingPage] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setPages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, (err) => {
-      // Ignored
-    });
-    return () => unsubscribe();
+    const fetchPages = async () => {
+      try {
+        setLoading(true);
+        const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
+        const snapshot = await getDocs(q);
+        setPages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } catch (error) {
+        console.error("Error fetching pages:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPages();
   }, []);
 
   const handleSavePage = async (data: any) => {
@@ -40,14 +47,16 @@ export const PageManager: React.FC = () => {
           ...data,
           updatedAt: serverTimestamp()
         });
+        setPages(prev => prev.map(p => p.id === editingPage.id ? { ...p, ...data } : p));
         toast.success('تم تحديث الصفحة بنجاح');
       } else {
-        await addDoc(collection(db, 'pages'), {
+        const docRef = await addDoc(collection(db, 'pages'), {
           ...data,
           order: pages.length,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
+        setPages(prev => [...prev, { id: docRef.id, ...data }]);
         toast.success('تم إنشاء الصفحة بنجاح');
       }
       setIsEditing(false);
@@ -66,6 +75,7 @@ export const PageManager: React.FC = () => {
     if (confirm('هل أنت متأكد من حذف هذه الصفحة؟')) {
       try {
         await deleteDoc(doc(db, 'pages', id));
+        setPages(prev => prev.filter(p => p.id !== id));
         toast.success('تم حذف الصفحة بنجاح');
       } catch (error) {
         toast.error('حدث خطأ أثناء حذف الصفحة');
@@ -110,7 +120,11 @@ export const PageManager: React.FC = () => {
       </div>
 
       <div className="grid gap-4">
-        {filteredPages.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center p-12">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : filteredPages.length === 0 ? (
           <Card className="p-12 text-center text-muted-foreground">
             لا توجد أقسام حالياً. ابدأ بإضافة قسم جديد.
           </Card>

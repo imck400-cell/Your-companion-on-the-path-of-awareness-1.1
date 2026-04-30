@@ -2,27 +2,53 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { collection, onSnapshot, query, orderBy, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, updateDoc, doc, deleteDoc, limit, startAfter } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { MessageSquare, Clock, AlertCircle, CheckCircle2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const TicketSystem: React.FC = () => {
   const [tickets, setTickets] = useState<any[]>([]);
+  const [lastVisible, setLastVisible] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const PAGE_SIZE = 20;
+
+  const fetchTickets = async (loadMore = false) => {
+    try {
+      setLoading(true);
+      let q = query(collection(db, 'tickets'), orderBy('createdAt', 'desc'), limit(PAGE_SIZE));
+      
+      if (loadMore && lastVisible) {
+        q = query(collection(db, 'tickets'), orderBy('createdAt', 'desc'), startAfter(lastVisible), limit(PAGE_SIZE));
+      }
+
+      const snapshot = await getDocs(q);
+      const fetchedTickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      if (loadMore) {
+        setTickets(prev => [...prev, ...fetchedTickets]);
+      } else {
+        setTickets(fetchedTickets);
+      }
+
+      setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+      setHasMore(snapshot.docs.length === PAGE_SIZE);
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const q = query(collection(db, 'tickets'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setTickets(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, (err) => {
-      // Ignored
-    });
-    return () => unsubscribe();
+    fetchTickets();
   }, []);
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
       await updateDoc(doc(db, 'tickets', id), { status });
+      setTickets(prev => prev.map(t => t.id === id ? { ...t, status } : t));
       toast.success('تم تحديث حالة التذكرة');
     } catch (error) {
       toast.error('حدث خطأ أثناء التحديث');
@@ -33,6 +59,7 @@ export const TicketSystem: React.FC = () => {
     if (confirm('هل أنت متأكد من حذف هذه التذكرة؟')) {
       try {
         await deleteDoc(doc(db, 'tickets', id));
+        setTickets(prev => prev.filter(t => t.id !== id));
         toast.success('تم حذف التذكرة');
       } catch (error) {
         toast.error('حدث خطأ أثناء الحذف');
@@ -117,10 +144,20 @@ export const TicketSystem: React.FC = () => {
             </CardContent>
           </Card>
         ))}
-        {tickets.length === 0 && (
+        {tickets.length === 0 && !loading && (
           <Card className="p-12 text-center text-muted-foreground">
             لا توجد تذاكر حالياً.
           </Card>
+        )}
+        {loading && (
+          <div className="flex justify-center p-4">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
+        {hasMore && tickets.length > 0 && !loading && (
+          <Button variant="outline" className="w-full" onClick={() => fetchTickets(true)}>
+            تحميل المزيد
+          </Button>
         )}
       </div>
     </div>

@@ -21,7 +21,7 @@ import { Home, LayoutGrid, GraduationCap, Info, ChevronLeft, ChevronRight, Cpu, 
 import { DEFAULT_HUBS } from '@/data/defaultPages';
 import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/lib/firebase';
-import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy } from 'firebase/firestore';
 
 const iconMap: Record<string, any> = {
   Cpu,
@@ -43,22 +43,21 @@ export const QuickNav: React.FC = () => {
   const [hubs, setHubs] = useState<any[]>(DEFAULT_HUBS);
 
   React.useEffect(() => {
-    const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchHubs = async () => {
       try {
+        const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
+        const snapshot = await getDocs(q);
         const fetchedHubs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         if (fetchedHubs.length > 0) {
           setHubs(fetchedHubs);
         }
-      } catch (e) {
-        console.warn("Error processing hubs in QuickNav:", e);
+      } catch (error) {
+        if (!String(error).includes('Quota') && !String(error).includes('resource-exhausted')) {
+          console.error("Error fetching hubs for QuickNav:", error);
+        }
       }
-    }, (error) => {
-      if (String(error).includes('Quota') || String(error).includes('resource-exhausted')) return;
-      console.error("Error fetching hubs for QuickNav:", error);
-    });
-
-    return () => unsubscribe();
+    };
+    fetchHubs();
   }, []);
 
   const renderIcon = (iconName: string, className?: string) => {

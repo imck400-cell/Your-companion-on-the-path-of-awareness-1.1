@@ -4,22 +4,25 @@ import { QuickNav } from './QuickNav';
 import { Footer } from './Footer';
 import { Toaster } from '@/components/ui/sonner';
 import { AnnouncementTicker } from '@/components/AnnouncementTicker';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [announcements, setAnnouncements] = useState<{ items: any[]; speed: number; active: boolean } | null>(null);
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'site_settings', 'home_page'), (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        setAnnouncements(data?.announcements ?? null);
+    const fetchAnnouncements = async () => {
+      try {
+        const snap = await getDoc(doc(db, 'site_settings', 'home_page'));
+        if (snap.exists()) {
+          const data = snap.data();
+          setAnnouncements(data?.announcements ?? null);
+        }
+      } catch (err) {
+        // Ignored
       }
-    }, (err) => {
-      // Ignored
-    });
-    return () => unsub();
+    };
+    fetchAnnouncements();
   }, []);
 
   return (

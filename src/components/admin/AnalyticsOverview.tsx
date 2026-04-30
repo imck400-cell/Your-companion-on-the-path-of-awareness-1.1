@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Users, Eye, MousePointer2, Clock } from 'lucide-react';
 
 export const AnalyticsOverview: React.FC<{ full?: boolean }> = ({ full }) => {
   const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     views: 0,
     uniqueUsers: 0,
@@ -15,31 +16,38 @@ export const AnalyticsOverview: React.FC<{ full?: boolean }> = ({ full }) => {
   });
 
   useEffect(() => {
-    const q = query(collection(db, 'analytics'), orderBy('timestamp', 'desc'), limit(100));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const events = snapshot.docs.map(doc => doc.data());
-      
-      // Group by day for chart
-      const grouped = events.reduce((acc: any, event: any) => {
-        const date = event.timestamp ? new Date(event.timestamp.toDate()).toLocaleDateString('ar-EG') : 'N/A';
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-      }, {});
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        const q = query(collection(db, 'analytics'), orderBy('timestamp', 'desc'), limit(100));
+        const snapshot = await getDocs(q);
+        const events = snapshot.docs.map(doc => doc.data());
+        
+        // Group by day for chart
+        const grouped = events.reduce((acc: any, event: any) => {
+          const date = event.timestamp ? new Date(event.timestamp.toDate()).toLocaleDateString('ar-EG') : 'N/A';
+          acc[date] = (acc[date] || 0) + 1;
+          return acc;
+        }, {});
 
-      const chartData = Object.entries(grouped).map(([name, value]) => ({ name, value })).reverse();
-      setData(chartData);
+        const chartData = Object.entries(grouped).map(([name, value]) => ({ name, value })).reverse();
+        setData(chartData);
 
-      // Simple stats
-      setStats({
-        views: events.filter(e => e.type === 'page_view').length,
-        uniqueUsers: new Set(events.map(e => e.userId)).size,
-        clicks: events.filter(e => e.type === 'click').length,
-        avgTime: '2:45' // Mocked for now
-      });
-    }, (err) => {
-      // Ignored
-    });
-    return () => unsubscribe();
+        // Simple stats
+        setStats({
+          views: events.filter(e => e.type === 'page_view').length,
+          uniqueUsers: new Set(events.map(e => e.userId)).size,
+          clicks: events.filter(e => e.type === 'click').length,
+          avgTime: '2:45' // Mocked for now
+        });
+      } catch (error) {
+        console.error("Error fetching analytics:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
   }, []);
 
   return (
