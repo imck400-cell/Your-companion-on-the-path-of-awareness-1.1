@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { collection, getDocs, query, orderBy, updateDoc, doc, deleteDoc, limit, startAfter } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { localDb } from '@/lib/localDb';
 import { MessageSquare, Clock, AlertCircle, CheckCircle2, Trash2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { getCache, setCache } from '@/lib/cache';
@@ -34,14 +33,9 @@ export const TicketSystem: React.FC = () => {
         setLoading(true);
       }
       
-      let q = query(collection(db, 'tickets'), orderBy('createdAt', 'desc'), limit(PAGE_SIZE));
-      
-      if (loadMore && lastVisible) {
-        q = query(collection(db, 'tickets'), orderBy('createdAt', 'desc'), startAfter(lastVisible), limit(PAGE_SIZE));
-      }
-
-      const snapshot = await getDocs(q);
-      const fetchedTickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const fetchedTickets = localDb.getCollection('tickets').sort((a: any, b: any) => 
+        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      ).slice((loadMore && lastVisible ? lastVisible : 0), (loadMore && lastVisible ? lastVisible : 0) + PAGE_SIZE);
       
       if (loadMore) {
         const newData = [...tickets, ...fetchedTickets];
@@ -52,8 +46,8 @@ export const TicketSystem: React.FC = () => {
         setCache('tickets_data', fetchedTickets);
       }
 
-      setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
-      const moreAvailable = snapshot.docs.length === PAGE_SIZE;
+      setLastVisible((loadMore && lastVisible ? lastVisible : 0) + PAGE_SIZE);
+      const moreAvailable = fetchedTickets.length === PAGE_SIZE;
       setHasMore(moreAvailable);
       setCache('tickets_hasMore', moreAvailable);
     } catch (error) {
@@ -70,7 +64,7 @@ export const TicketSystem: React.FC = () => {
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
-      await updateDoc(doc(db, 'tickets', id), { status });
+      localDb.updateDoc('tickets', id, { status });
       const updatedTickets = tickets.map(t => t.id === id ? { ...t, status } : t);
       setTickets(updatedTickets);
       setCache('tickets_data', updatedTickets);
@@ -83,7 +77,7 @@ export const TicketSystem: React.FC = () => {
   const handleDeleteTicket = async (id: string) => {
     if (confirm('هل أنت متأكد من حذف هذه التذكرة؟')) {
       try {
-        await deleteDoc(doc(db, 'tickets', id));
+        localDb.deleteDoc('tickets', id);
         const updatedTickets = tickets.filter(t => t.id !== id);
         setTickets(updatedTickets);
         setCache('tickets_data', updatedTickets);

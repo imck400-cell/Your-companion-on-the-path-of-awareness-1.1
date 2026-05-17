@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { localDb } from '@/lib/localDb';
 import { Users, Eye, MousePointer2, Clock, RefreshCw } from 'lucide-react';
 import { getCache, setCache } from '@/lib/cache';
 import { Button } from '@/components/ui/button';
@@ -34,13 +33,13 @@ export const AnalyticsOverview: React.FC<{ full?: boolean }> = ({ full }) => {
         setLoading(true);
       }
       
-      const q = query(collection(db, 'analytics'), orderBy('timestamp', 'desc'), limit(100));
-      const snapshot = await getDocs(q);
-      const events = snapshot.docs.map(doc => doc.data());
+      const events = localDb.getCollection('analytics').sort((a: any, b: any) => 
+        new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()
+      ).slice(0, 100);
       
       // Group by day for chart
       const grouped = events.reduce((acc: any, event: any) => {
-        const date = event.timestamp ? new Date(event.timestamp.toDate()).toLocaleDateString('ar-EG') : 'N/A';
+        const date = event.timestamp ? new Date(event.timestamp).toLocaleDateString('ar-EG') : 'N/A';
         acc[date] = (acc[date] || 0) + 1;
         return acc;
       }, {});

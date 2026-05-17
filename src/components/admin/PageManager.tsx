@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Edit2, Trash2, Move, FileText, RefreshCw } from 'lucide-react';
-import { collection, getDocs, query, orderBy, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { localDb } from '@/lib/localDb';
 import { PageBuilder } from './PageBuilder';
 import { toast } from 'sonner';
 import { getCache, setCache } from '@/lib/cache';
@@ -33,9 +32,7 @@ export const PageManager: React.FC = () => {
         setLoading(true);
       }
       
-      const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
-      const snapshot = await getDocs(q);
-      const fetchedPages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const fetchedPages = localDb.getCollection('pages').sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
       setPages(fetchedPages);
       setCache('pages_data', fetchedPages);
     } catch (error) {
@@ -60,22 +57,17 @@ export const PageManager: React.FC = () => {
 
     try {
       if (editingPage) {
-        await updateDoc(doc(db, 'pages', editingPage.id), {
-          ...data,
-          updatedAt: serverTimestamp()
-        });
+        localDb.updateDoc('pages', editingPage.id, data);
         const newPages = pages.map(p => p.id === editingPage.id ? { ...p, ...data } : p);
         setPages(newPages);
         setCache('pages_data', newPages);
         toast.success('تم تحديث الصفحة بنجاح');
       } else {
-        const docRef = await addDoc(collection(db, 'pages'), {
+        const newDoc = localDb.addDoc('pages', {
           ...data,
           order: pages.length,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
         });
-        const newPages = [...pages, { id: docRef.id, ...data }];
+        const newPages = [...pages, newDoc];
         setPages(newPages);
         setCache('pages_data', newPages);
         toast.success('تم إنشاء الصفحة بنجاح');
@@ -95,7 +87,7 @@ export const PageManager: React.FC = () => {
   const handleDeletePage = async (id: string) => {
     if (confirm('هل أنت متأكد من حذف هذه الصفحة؟')) {
       try {
-        await deleteDoc(doc(db, 'pages', id));
+        localDb.deleteDoc('pages', id);
         const newPages = pages.filter(p => p.id !== id);
         setPages(newPages);
         setCache('pages_data', newPages);

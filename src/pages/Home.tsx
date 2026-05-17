@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { trackEvent } from '@/lib/analytics';
-import { collection, onSnapshot, query, orderBy, getDocs, serverTimestamp, doc, updateDoc, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { localDb } from '@/lib/localDb';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -32,19 +31,18 @@ const Home: React.FC = () => {
 
     const fetchHomeData = async () => {
       try {
-        const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-          setHubs(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+        const fetchedHubs = localDb.getCollection('pages').sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+        if (fetchedHubs.length > 0) {
+          setHubs(fetchedHubs.map((h: any) => ({ ...h })));
         }
       } catch (error) {
         handleFirestoreError(error, OperationType.GET, 'pages');
       }
 
       try {
-        const docSnap = await getDoc(doc(db, 'site_settings', 'home_page'));
-        if (docSnap.exists()) {
-          setSiteSettings(docSnap.data());
+        const docSnap = localDb.getDoc('site_settings', 'home_page');
+        if (docSnap) {
+          setSiteSettings(docSnap);
         }
       } catch (error) {
         if (!String(error).includes('Quota') && !String(error).includes('resource-exhausted')) {
@@ -70,31 +68,27 @@ const Home: React.FC = () => {
           setLoading(true);
           try {
             for (const hub of DEFAULT_HUBS) {
-              const docRef = doc(db, 'pages', hub.slug);
-              const docSnap = await getDoc(docRef);
+              const docSnap = localDb.getDoc('pages', hub.slug);
               let existingImage = null;
               let existingItems: any[] = [];
               
-              if (docSnap.exists()) {
-                const data = docSnap.data();
-                existingImage = data.image;
-                existingItems = data.items || [];
+              if (docSnap) {
+                existingImage = docSnap.image;
+                existingItems = docSnap.items || [];
               }
               
               const mergedItems = hub.items.map(defaultItem => {
-                const existingItem = existingItems.find(i => i.id === defaultItem.id);
+                const existingItem = existingItems.find((i: any) => i.id === defaultItem.id);
                 return {
                   ...defaultItem,
                   image: existingItem?.image || defaultItem.image
                 };
               });
 
-              await setDoc(docRef, {
+              localDb.setDoc('pages', hub.slug, {
                 ...hub,
                 image: existingImage || (hub as any).image || null,
                 items: mergedItems,
-                createdAt: docSnap.exists() ? docSnap.data().createdAt : serverTimestamp(),
-                updatedAt: serverTimestamp()
               });
             }
             toast.success(lang === 'ar' ? 'تمت المزامنة مع الإعدادات الافتراضية بنجاح' : 'Synced with defaults successfully');
@@ -134,18 +128,16 @@ const Home: React.FC = () => {
           return;
         }
 
-        const docRef = doc(db, 'pages', hubId);
         if (itemId) {
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            const updatedItems = data.items.map((item: any) => 
+          const docSnap = localDb.getDoc('pages', hubId);
+          if (docSnap) {
+            const updatedItems = docSnap.items.map((item: any) => 
               item.id === itemId ? { ...item, image: base64String } : item
             );
-            await updateDoc(docRef, { items: updatedItems, updatedAt: serverTimestamp() });
+            localDb.updateDoc('pages', hubId, { items: updatedItems });
           }
         } else {
-          await updateDoc(docRef, { image: base64String, updatedAt: serverTimestamp() });
+          localDb.updateDoc('pages', hubId, { image: base64String });
         }
         toast.success(lang === 'ar' ? 'تم تحديث الصورة بنجاح' : 'Image updated successfully');
       } catch (error: any) {

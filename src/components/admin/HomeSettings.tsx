@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { localDb } from '@/lib/localDb';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,10 +66,8 @@ export const HomeSettings: React.FC = () => {
         setLoading(true);
       }
 
-      const docRef = doc(db, 'site_settings', 'home_page');
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
+      let data = localDb.getDoc('site_settings', 'home_page');
+      if (data) {
         setSettings(data);
         setCache('home_settings_data', data);
       }
@@ -89,11 +86,7 @@ export const HomeSettings: React.FC = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const docRef = doc(db, 'site_settings', 'home_page');
-      await setDoc(docRef, {
-        ...settings,
-        updatedAt: serverTimestamp()
-      });
+      localDb.setDoc('site_settings', 'home_page', settings);
       setCache('home_settings_data', settings);
       toast.success('تم حفظ الإعدادات بنجاح');
     } catch (error) {
@@ -217,11 +210,7 @@ export const HomeSettings: React.FC = () => {
                 }
               ]
             };
-            const docRef = doc(db, 'site_settings', 'home_page');
-            await setDoc(docRef, {
-              ...defaultSettings,
-              updatedAt: serverTimestamp()
-            });
+            localDb.setDoc('site_settings', 'home_page', defaultSettings);
             setSettings(defaultSettings);
             toast.success('تمت المزامنة مع الإعدادات الافتراضية بنجاح');
           } catch (error) {

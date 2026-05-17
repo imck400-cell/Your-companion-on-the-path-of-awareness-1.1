@@ -1,5 +1,3 @@
-import { auth } from './firebase';
-
 import { toast } from 'sonner';
 
 export enum OperationType {
@@ -39,28 +37,30 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     return;
   }
   
+  let currentUser = undefined;
+  try {
+     const savedUser = localStorage.getItem('mock_user');
+     if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+     }
+  } catch(e) {}
+  
   const errInfo: FirestoreErrorInfo = {
     error: errorMessage,
     authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
-        providerId: provider.providerId,
-        displayName: provider.displayName,
-        email: provider.email,
-        photoUrl: provider.photoURL
-      })) || []
+      userId: currentUser?.uid,
+      email: currentUser?.email,
+      emailVerified: true,
+      isAnonymous: false,
+      tenantId: null,
+      providerInfo: []
     },
     operationType,
     path
   };
 
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  console.error('LocalDb Error: ', JSON.stringify(errInfo));
 
-  // Only throw explicitly for "Missing or insufficient permissions" so we don't crash firebase internals
   if (errorMessage.includes('Missing or insufficient permissions') || errorMessage.includes('permission-denied')) {
     throw new Error(JSON.stringify(errInfo));
   }

@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { collection, getDocs, query, orderBy, limit, startAfter, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { localDb } from '@/lib/localDb';
 import { Megaphone, Plus, Trash2, ExternalLink, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { getCache, setCache } from '@/lib/cache';
@@ -34,35 +33,21 @@ export const AdEngine: React.FC = () => {
         setLoading(true);
       }
 
-      let q = query(
-        collection(db, 'ads'),
-        orderBy('createdAt', 'desc'),
-        limit(20)
-      );
-
-      if (loadMore && lastVisible) {
-        q = query(
-          collection(db, 'ads'),
-          orderBy('createdAt', 'desc'),
-          startAfter(lastVisible),
-          limit(20)
-        );
-      }
-
-      const snapshot = await getDocs(q);
-      const newAds = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const fetchedAds = localDb.getCollection('ads').sort((a: any, b: any) => 
+        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      ).slice((loadMore && lastVisible ? lastVisible : 0), (loadMore && lastVisible ? lastVisible : 0) + 20);
       
       if (loadMore) {
-        const appendedAds = [...ads, ...newAds];
+        const appendedAds = [...ads, ...fetchedAds];
         setAds(appendedAds);
         setCache('ads_data', appendedAds);
       } else {
-        setAds(newAds);
-        setCache('ads_data', newAds);
+        setAds(fetchedAds);
+        setCache('ads_data', fetchedAds);
       }
 
-      setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
-      const moreAvailable = snapshot.docs.length === 20;
+      setLastVisible((loadMore && lastVisible ? lastVisible : 0) + 20);
+      const moreAvailable = fetchedAds.length === 20;
       setHasMore(moreAvailable);
       setCache('ads_hasMore', moreAvailable);
     } catch (error) {
@@ -84,11 +69,8 @@ export const AdEngine: React.FC = () => {
     }
 
     try {
-      const docRef = await addDoc(collection(db, 'ads'), {
-        ...newAd,
-        createdAt: serverTimestamp()
-      });
-      const updatedAds = [{ id: docRef.id, ...newAd, createdAt: new Date() }, ...ads];
+      const newDoc = localDb.addDoc('ads', newAd);
+      const updatedAds = [newDoc, ...ads];
       setAds(updatedAds);
       setCache('ads_data', updatedAds);
       setNewAd({ title: '', link: '', imageUrl: '' });
@@ -100,7 +82,7 @@ export const AdEngine: React.FC = () => {
 
   const handleDeleteAd = async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'ads', id));
+      localDb.deleteDoc('ads', id);
       const updatedAds = ads.filter(ad => ad.id !== id);
       setAds(updatedAds);
       setCache('ads_data', updatedAds);

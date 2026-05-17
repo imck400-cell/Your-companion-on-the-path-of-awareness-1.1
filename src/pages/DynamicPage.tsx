@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, getDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { localDb } from '@/lib/localDb';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -50,37 +49,29 @@ const DynamicPage: React.FC = () => {
       if (!slug) return;
       setLoading(true);
       try {
-        // Try matching by slug first
-        let q = query(collection(db, 'pages'), where('slug', '==', slug));
-        let querySnapshot = await getDocs(q);
+        let pageData: any = null;
+        let pageId = null;
+
+        const allPages = localDb.getCollection('pages');
         
-        // If not found by slug, try matching by common titles for special pages
-        if (querySnapshot.empty) {
+        let found = allPages.find((p: any) => p.slug === slug);
+        if (!found) {
           const specialTitles: Record<string, string> = {
             'training-courses': 'الدورات التدريبية الحالية',
             'about': 'من نحن'
           };
-          
           if (specialTitles[slug]) {
-            q = query(collection(db, 'pages'), where('title.ar', '==', specialTitles[slug]));
-            querySnapshot = await getDocs(q);
+            found = allPages.find((p: any) => p.title?.ar === specialTitles[slug]);
           }
         }
+        
+        if (!found) {
+          found = allPages.find((p: any) => p.id === slug);
+        }
 
-        let pageData = null;
-        let pageId = null;
-
-        if (!querySnapshot.empty) {
-          pageData = querySnapshot.docs[0].data();
-          pageId = querySnapshot.docs[0].id;
-        } else {
-          // If still not found by query, let's try assuming the slug is actually the document ID
-          const docRef = doc(db, 'pages', slug);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            pageData = docSnap.data();
-            pageId = docSnap.id;
-          }
+        if (found) {
+          pageData = found;
+          pageId = found.id;
         }
 
         if (pageData && pageId) {
@@ -157,11 +148,10 @@ const DynamicPage: React.FC = () => {
           return;
         }
 
-        const docRef = doc(db, 'pages', page.id);
         const updatedItems = page.items.map((item: any) => 
           item.id === itemId ? { ...item, image: base64String } : item
         );
-        await updateDoc(docRef, { items: updatedItems, updatedAt: serverTimestamp() });
+        localDb.updateDoc('pages', page.id, { items: updatedItems });
         setPage({ ...page, items: updatedItems });
         toast.success(lang === 'ar' ? 'تم تحديث الصورة بنجاح' : 'Image updated successfully');
       } catch (error: any) {

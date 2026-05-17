@@ -12,8 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { localDb } from '@/lib/localDb';
 import { toast } from 'sonner';
 import { UserCog, Plus, Trash2, Shield, Calendar, RefreshCw } from 'lucide-react';
 import { getCache, setCache } from '@/lib/cache';
@@ -58,9 +57,8 @@ export const AccountManagement: React.FC = () => {
         setLoadingAdmins(true);
       }
 
-      const q = query(collection(db, 'users'), where('role', 'in', ['admin', 'super_admin']));
-      const snapshot = await getDocs(q);
-      const fetchedAdmins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const allUsers = localDb.getCollection('users');
+      const fetchedAdmins = allUsers.filter((u: any) => u.role === 'admin' || u.role === 'super_admin');
       setAdmins(fetchedAdmins);
       setCache('admins_data', fetchedAdmins);
     } catch (error) {
@@ -96,11 +94,10 @@ export const AccountManagement: React.FC = () => {
       // In a real app, we might check if user exists or send an invite
       // For this demo, we'll just create a placeholder in 'users' collection
       // The user will get these permissions when they log in with this email
-      await addDoc(collection(db, 'users_invites'), {
+      localDb.addDoc('users_invites', {
         ...newAdmin,
         role: 'admin',
         invitedBy: user?.uid,
-        createdAt: serverTimestamp(),
       });
       
       toast.success('تم إرسال الدعوة/إضافة المدير بنجاح');

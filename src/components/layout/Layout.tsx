@@ -4,8 +4,7 @@ import { QuickNav } from './QuickNav';
 import { Footer } from './Footer';
 import { Toaster } from '@/components/ui/sonner';
 import { AnnouncementTicker } from '@/components/AnnouncementTicker';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { localDb } from '@/lib/localDb';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [announcements, setAnnouncements] = useState<{ items: any[]; speed: number; active: boolean } | null>(null);
@@ -13,9 +12,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const snap = await getDoc(doc(db, 'site_settings', 'home_page'));
-        if (snap.exists()) {
-          const data = snap.data();
+        const data = localDb.getDoc('site_settings', 'home_page');
+        if (data) {
           setAnnouncements(data?.announcements ?? null);
         }
       } catch (err) {

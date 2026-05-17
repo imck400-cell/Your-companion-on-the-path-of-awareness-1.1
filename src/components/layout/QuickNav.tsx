@@ -20,8 +20,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Home, LayoutGrid, GraduationCap, Info, ChevronLeft, ChevronRight, Cpu, LayoutDashboard, Users, BookOpen, Building2 } from 'lucide-react';
 import { DEFAULT_HUBS } from '@/data/defaultPages';
 import { useLanguage } from '@/context/LanguageContext';
-import { db } from '@/lib/firebase';
-import { collection, query, getDocs, orderBy } from 'firebase/firestore';
+import { localDb } from '@/lib/localDb';
 
 const iconMap: Record<string, any> = {
   Cpu,
@@ -45,9 +44,7 @@ export const QuickNav: React.FC = () => {
   React.useEffect(() => {
     const fetchHubs = async () => {
       try {
-        const q = query(collection(db, 'pages'), orderBy('order', 'asc'));
-        const snapshot = await getDocs(q);
-        const fetchedHubs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const fetchedHubs = localDb.getCollection('pages').sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
         if (fetchedHubs.length > 0) {
           setHubs(fetchedHubs);
         }
